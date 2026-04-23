@@ -40,8 +40,13 @@ We use [Yarn Workspaces](https://yarnpkg.com/features/workspaces) to manage both
    - **Frontend:** In the `frontend` directory, create a `.env` file with your Google Maps API key and Backend URL.
 
 ### Running the App
-You can run the development servers from the root directory:
+You can run both the frontend and backend development servers concurrently from the root directory:
 
+```bash
+yarn start
+```
+
+Alternatively, you can run them individually:
 - Run backend: `yarn run dev:backend`
 - Run frontend: `yarn run dev:frontend`
 

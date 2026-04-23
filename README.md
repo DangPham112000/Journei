@@ -30,17 +30,20 @@ A web application to plan your journeys. This app allows you to choose dates for
 - MongoDB instance (local or MongoDB Atlas)
 - Google Cloud Project with Calendar API and Maps JavaScript API enabled.
 
-### Backend Setup
-1. Navigate to the `backend` directory.
-2. Install dependencies: `npm install`
-3. Create a `.env` file based on the instructions inside the backend directory (requires MongoDB URI and Google credentials).
-4. Run the development server: `npm run dev`
+### Setup Instructions
+We use [Yarn Workspaces](https://yarnpkg.com/features/workspaces) to manage both the frontend and backend dependencies from the root directory.
 
-### Frontend Setup
-1. Navigate to the `frontend` directory.
-2. Install dependencies: `npm install`
-3. Create a `.env` file with your Google Maps API key and Backend URL.
-4. Run the development server: `npm run dev`
+1. Ensure you are in the root directory.
+2. Install dependencies for both frontend and backend: `yarn install`
+3. Set up the environment files:
+   - **Backend:** In the `backend` directory, create a `.env` file based on the provided instructions (requires MongoDB URI and Google credentials).
+   - **Frontend:** In the `frontend` directory, create a `.env` file with your Google Maps API key and Backend URL.
+
+### Running the App
+You can run the development servers from the root directory:
+
+- Run backend: `yarn run dev:backend`
+- Run frontend: `yarn run dev:frontend`
 
 ## Features
 

@@ -50,6 +50,10 @@ Alternatively, you can run them individually:
 - Run backend: `yarn run dev:backend`
 - Run frontend: `yarn run dev:frontend`
 
+### GraphQL Code Generation
+This project uses GraphQL Code Generator to automatically create TypeScript types and Apollo hooks from `.gql` files.
+- To generate types for both backend and frontend, run: `yarn generate`
+
 ## Features
 
 - **Interactive Map:** Click to drop pins on locations you want to visit, or paste Google Maps links to resolve coordinates.

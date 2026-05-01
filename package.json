@@ -10,7 +10,8 @@
     "dev:backend": "yarn workspace backend dev",
     "dev:frontend": "yarn workspace frontend dev",
     "build:backend": "yarn workspace backend build",
-    "build:frontend": "yarn workspace frontend build"
+    "build:frontend": "yarn workspace frontend build",
+    "generate": "concurrently \"yarn workspace backend generate\" \"yarn workspace frontend generate\""
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

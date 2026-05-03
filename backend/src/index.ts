@@ -4,8 +4,11 @@ import { expressMiddleware } from '@apollo/server/express4';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
+import cookieParser from 'cookie-parser';
+import jwt from 'jsonwebtoken';
 import { typeDefs } from './graphql/typeDefs';
 import { resolvers } from './graphql/resolvers';
+import { User } from './models/User';
 
 dotenv.config();
 
@@ -13,8 +16,12 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  credentials: true
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 // TODO: Setup Google Calendar OAuth2 routes here
 // Example:
@@ -40,7 +47,22 @@ async function startServer() {
   await server.start();
 
   // Apply GraphQL middleware
-  app.use('/graphql', expressMiddleware(server));
+  app.use('/graphql', expressMiddleware(server, {
+    context: async ({ req, res }) => {
+      let user = null;
+      const token = req.cookies.token;
+      if (token) {
+        try {
+          const jwtSecret = process.env.JWT_SECRET || 'fallback_secret_for_development_only';
+          const decoded = jwt.verify(token, jwtSecret) as { userId: string };
+          user = await User.findById(decoded.userId);
+        } catch (error) {
+          console.error('JWT Verification Error:', error);
+        }
+      }
+      return { req, res, user };
+    },
+  }));
 
   app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);

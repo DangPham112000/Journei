@@ -3,11 +3,13 @@ import { Container, Grid, Typography, Box } from '@mui/material';
 import MapComponent from './components/Map';
 import JourneyPlanner from './components/JourneyPlanner';
 import LocationInput from './components/LocationInput';
+import GoogleLoginComponent from './components/GoogleLogin';
 
 // Initialize Apollo Client
 const client = new ApolloClient({
   link: new HttpLink({
     uri: import.meta.env.VITE_GRAPHQL_URI || 'http://localhost:4000/graphql',
+    credentials: 'include', // Important to send and receive cookies
   }),
   cache: new InMemoryCache(),
 });
@@ -16,9 +18,12 @@ function App() {
   return (
     <ApolloProvider client={client}>
       <Container maxWidth="xl" className="h-screen py-8 flex flex-col">
-        <Typography variant="h3" component="h1" gutterBottom className="font-bold text-gray-800 text-center">
-          Journey Planner
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h3" component="h1" gutterBottom className="font-bold text-gray-800">
+            Journey Planner
+          </Typography>
+          <GoogleLoginComponent />
+        </Box>
 
         <Grid container spacing={4} className="flex-grow min-h-0">
           <Grid item xs={12} md={4} className="flex flex-col h-full gap-4">

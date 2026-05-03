@@ -36,8 +36,21 @@ We use [Yarn Workspaces](https://yarnpkg.com/features/workspaces) to manage both
 1. Ensure you are in the root directory.
 2. Install dependencies for both frontend and backend: `yarn install`
 3. Set up the environment files:
-   - **Backend:** In the `backend` directory, create a `.env` file based on the provided instructions (requires MongoDB URI and Google credentials).
-   - **Frontend:** In the `frontend` directory, create a `.env` file with your Google Maps API key and Backend URL.
+   - **Backend:** In the `backend` directory, create a `.env` file with:
+     ```env
+     PORT=4000
+     MONGODB_URI=mongodb://localhost:27017/journey-planner
+     GOOGLE_CLIENT_ID=your_google_client_id
+     GOOGLE_CLIENT_SECRET=your_google_client_secret
+     JWT_SECRET=your_jwt_secret
+     FRONTEND_URL=http://localhost:5173
+     ```
+   - **Frontend:** In the `frontend` directory, create a `.env` file with:
+     ```env
+     VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+     VITE_GRAPHQL_URI=http://localhost:4000/graphql
+     VITE_GOOGLE_CLIENT_ID=your_google_client_id
+     ```
 
 ### Running the App
 You can run both the frontend and backend development servers concurrently from the root directory:

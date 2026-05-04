@@ -1,6 +1,7 @@
 import { GraphQLResolveInfo } from 'graphql';
 export type Maybe<T> = T | null;
 export type InputMaybe<T> = Maybe<T>;
+export type RequireFields<T, K extends keyof T> = Omit<T, K> & { [P in K]-?: NonNullable<T[P]> };
 /** All built-in and custom scalars, mapped to their actual values */
 export type Scalars = {
   ID: { input: string; output: string; }
@@ -10,9 +11,29 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type Mutation = {
+  __typename?: 'Mutation';
+  loginWithGoogle: User;
+};
+
+
+export type MutationLoginWithGoogleArgs = {
+  code: Scalars['String']['input'];
+};
+
 export type Query = {
   __typename?: 'Query';
   hello: Scalars['String']['output'];
+  me?: Maybe<User>;
+};
+
+export type User = {
+  __typename?: 'User';
+  email: Scalars['String']['output'];
+  googleId: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  picture?: Maybe<Scalars['String']['output']>;
 };
 
 
@@ -89,21 +110,42 @@ export type DirectiveResolverFn<TResult = Record<PropertyKey, never>, TParent = 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  ID: ResolverTypeWrapper<Scalars['ID']['output']>;
+  Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
+  User: ResolverTypeWrapper<User>;
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
+  ID: Scalars['ID']['output'];
+  Mutation: Record<PropertyKey, never>;
   Query: Record<PropertyKey, never>;
   String: Scalars['String']['output'];
+  User: User;
+};
+
+export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  loginWithGoogle?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationLoginWithGoogleArgs, 'code'>>;
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+};
+
+export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
+  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  googleId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  picture?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = any> = {
+  Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  User?: UserResolvers<ContextType>;
 };

@@ -34,7 +34,10 @@ export default function Login() {
           Welcome to Journey Planner
         </Typography>
         <Typography variant="body1" color="textSecondary" className="mb-4">
-          Please sign in to plan your trips and view your locations.
+          Please sign in or register to plan your trips and view your locations.
+        </Typography>
+        <Typography variant="body2" color="textSecondary" className="mb-6">
+          If you don't have an account, one will be created for you automatically.
         </Typography>
         <Button
           variant="contained"
@@ -43,7 +46,7 @@ export default function Login() {
           onClick={() => login()}
           disabled={loading}
         >
-          {loading ? <CircularProgress size={24} /> : 'Sign in with Google'}
+          {loading ? <CircularProgress size={24} /> : 'Sign In / Register with Google'}
         </Button>
         {error && (
           <Typography color="error" variant="body2" className="mt-2">

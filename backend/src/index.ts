@@ -6,8 +6,11 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
-import { typeDefs } from './graphql/typeDefs';
+import { readFileSync } from 'fs';
+import path from 'path';
 import { resolvers } from './graphql/resolvers';
+
+const typeDefs = readFileSync(path.join(__dirname, 'schema.gql'), 'utf8');
 
 dotenv.config();
 

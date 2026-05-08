@@ -1,6 +1,7 @@
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
+import { Event } from '../models/Event';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -12,45 +13,34 @@ const oAuth2Client = new OAuth2Client(
 
 export const resolvers = {
   Query: {
-    journeys: async () => {
-      // TODO: Fetch from MongoDB
-      return [];
-    },
-    journey: async (_: any, { id }: { id: string }) => {
-      // TODO: Fetch from MongoDB
-      return null;
-    },
+    hello: () => 'Hello from GraphQL!',
     me: async (_: any, __: any, context: any) => {
       if (!context.user) {
         return null;
       }
       return await User.findById(context.user.id);
+    },
+    events: async () => {
+      return await Event.find().populate('creator').populate('followers').populate('participants').sort({ startDate: 1 });
+    },
+    myEvents: async (_: any, __: any, context: any) => {
+      if (!context.user) throw new Error('Not authenticated');
+      return await Event.find({ creator: context.user.id }).populate('creator').populate('followers').populate('participants').sort({ startDate: 1 });
+    },
+    joinedEvents: async (_: any, __: any, context: any) => {
+      if (!context.user) throw new Error('Not authenticated');
+      return await Event.find({ participants: context.user.id }).populate('creator').populate('followers').populate('participants').sort({ startDate: 1 });
+    },
+    followedEvents: async (_: any, __: any, context: any) => {
+      if (!context.user) throw new Error('Not authenticated');
+      // Events where the user is in followers but NOT in participants
+      return await Event.find({
+        followers: context.user.id,
+        participants: { $ne: context.user.id }
+      }).populate('creator').populate('followers').populate('participants').sort({ startDate: 1 });
     }
   },
   Mutation: {
-    createJourney: async (_: any, args: { title: string; startDate: string; endDate: string }) => {
-      // TODO: Save to MongoDB
-      // TODO: Call Google Calendar API to check for overlap / create event if authorized
-      console.log('Creating journey', args);
-      return {
-        id: '1',
-        ...args,
-        locations: []
-      };
-    },
-    addLocationToJourney: async (_: any, args: { journeyId: string; name: string; lat?: number; lng?: number; googleMapsUrl?: string }) => {
-      // TODO: If googleMapsUrl is provided (especially short links like goo.gl),
-      // we need to resolve the URL to get lat/lng coordinates if they aren't provided.
-      // This might involve making a fetch request to the short URL and parsing the redirect.
-      console.log('Adding location', args);
-      return {
-        id: '1',
-        name: args.name,
-        lat: args.lat || 0,
-        lng: args.lng || 0,
-        googleMapsUrl: args.googleMapsUrl
-      };
-    },
     loginWithGoogle: async (_: any, { code }: { code: string }, context: any) => {
       try {
         const { tokens } = await oAuth2Client.getToken(code);
@@ -111,6 +101,99 @@ export const resolvers = {
         console.error('Error during Google login:', error);
         throw new Error('Failed to login with Google');
       }
+    },
+    createEvent: async (_: any, args: any, context: any) => {
+      if (!context.user) throw new Error('Not authenticated');
+
+      const eventArgs = {
+        title: args.title,
+        description: args.description,
+        startDate: args.startDate,
+        endDate: args.endDate,
+        location: args.location,
+        creator: context.user.id,
+        followers: args.autoFollow ? [context.user.id] : [],
+        participants: [],
+      };
+
+      const newEvent = await Event.create(eventArgs);
+      return await Event.findById(newEvent._id).populate('creator').populate('followers').populate('participants');
+    },
+    updateEvent: async (_: any, args: any, context: any) => {
+      if (!context.user) throw new Error('Not authenticated');
+      const event = await Event.findById(args.id);
+      if (!event) throw new Error('Event not found');
+      if (event.creator.toString() !== context.user.id) throw new Error('Not authorized to update this event');
+
+      if (args.title) event.title = args.title;
+      if (args.description !== undefined) event.description = args.description;
+      if (args.startDate) event.startDate = args.startDate;
+      if (args.endDate) event.endDate = args.endDate;
+      if (args.location !== undefined) event.location = args.location;
+
+      await event.save();
+      return await Event.findById(event._id).populate('creator').populate('followers').populate('participants');
+    },
+    deleteEvent: async (_: any, { id }: { id: string }, context: any) => {
+      if (!context.user) throw new Error('Not authenticated');
+      const event = await Event.findById(id);
+      if (!event) throw new Error('Event not found');
+      if (event.creator.toString() !== context.user.id) throw new Error('Not authorized to delete this event');
+
+      await Event.findByIdAndDelete(id);
+      return true;
+    },
+    joinEvent: async (_: any, { id }: { id: string }, context: any) => {
+      if (!context.user) throw new Error('Not authenticated');
+      const event = await Event.findById(id);
+      if (!event) throw new Error('Event not found');
+
+      if (!event.participants.includes(context.user.id)) {
+        event.participants.push(context.user.id);
+      }
+      if (!event.followers.includes(context.user.id)) {
+        event.followers.push(context.user.id);
+      }
+
+      await event.save();
+      return await Event.findById(id).populate('creator').populate('followers').populate('participants');
+    },
+    leaveEvent: async (_: any, { id }: { id: string }, context: any) => {
+      if (!context.user) throw new Error('Not authenticated');
+      const event = await Event.findById(id);
+      if (!event) throw new Error('Event not found');
+
+      event.participants = event.participants.filter(p => p.toString() !== context.user.id) as any;
+      // Keep in followers as per requirement: leaving moves back to followed section
+      if (!event.followers.some(f => f.toString() === context.user.id)) {
+          event.followers.push(context.user.id as any);
+      }
+
+      await event.save();
+      return await Event.findById(id).populate('creator').populate('followers').populate('participants');
+    },
+    followEvent: async (_: any, { id }: { id: string }, context: any) => {
+      if (!context.user) throw new Error('Not authenticated');
+      const event = await Event.findById(id);
+      if (!event) throw new Error('Event not found');
+
+      if (!event.followers.includes(context.user.id)) {
+        event.followers.push(context.user.id);
+      }
+
+      await event.save();
+      return await Event.findById(id).populate('creator').populate('followers').populate('participants');
+    },
+    unfollowEvent: async (_: any, { id }: { id: string }, context: any) => {
+      if (!context.user) throw new Error('Not authenticated');
+      const event = await Event.findById(id);
+      if (!event) throw new Error('Event not found');
+
+      event.followers = event.followers.filter(f => f.toString() !== context.user.id) as any;
+      event.participants = event.participants.filter(p => p.toString() !== context.user.id) as any;
+
+      await event.save();
+      return await Event.findById(id).populate('creator').populate('followers').populate('participants');
     }
   },
 };

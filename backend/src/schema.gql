@@ -6,11 +6,52 @@ type User {
   picture: String
 }
 
+type Event {
+  id: ID!
+  title: String!
+  description: String
+  startDate: String!
+  endDate: String!
+  location: String
+  creator: User!
+  followers: [User!]!
+  participants: [User!]!
+}
+
 type Query {
   hello: String!
   me: User
+  events: [Event!]!
+  myEvents: [Event!]!
+  joinedEvents: [Event!]!
+  followedEvents: [Event!]!
 }
 
 type Mutation {
   loginWithGoogle(code: String!): User!
+
+  createEvent(
+    title: String!
+    description: String
+    startDate: String!
+    endDate: String!
+    location: String
+    autoFollow: Boolean
+  ): Event!
+
+  updateEvent(
+    id: ID!
+    title: String
+    description: String
+    startDate: String
+    endDate: String
+    location: String
+  ): Event!
+
+  deleteEvent(id: ID!): Boolean!
+
+  joinEvent(id: ID!): Event!
+  leaveEvent(id: ID!): Event!
+  followEvent(id: ID!): Event!
+  unfollowEvent(id: ID!): Event!
 }

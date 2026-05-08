@@ -11,9 +11,59 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type Event = {
+  __typename?: 'Event';
+  creator: User;
+  description?: Maybe<Scalars['String']['output']>;
+  endDate: Scalars['String']['output'];
+  followers: Array<User>;
+  id: Scalars['ID']['output'];
+  location?: Maybe<Scalars['String']['output']>;
+  participants: Array<User>;
+  startDate: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
+  createEvent: Event;
+  deleteEvent: Scalars['Boolean']['output'];
+  followEvent: Event;
+  joinEvent: Event;
+  leaveEvent: Event;
   loginWithGoogle: User;
+  unfollowEvent: Event;
+  updateEvent: Event;
+};
+
+
+export type MutationCreateEventArgs = {
+  autoFollow?: InputMaybe<Scalars['Boolean']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  endDate: Scalars['String']['input'];
+  location?: InputMaybe<Scalars['String']['input']>;
+  startDate: Scalars['String']['input'];
+  title: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteEventArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationFollowEventArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationJoinEventArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationLeaveEventArgs = {
+  id: Scalars['ID']['input'];
 };
 
 
@@ -21,10 +71,29 @@ export type MutationLoginWithGoogleArgs = {
   code: Scalars['String']['input'];
 };
 
+
+export type MutationUnfollowEventArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type MutationUpdateEventArgs = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  endDate?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  location?: InputMaybe<Scalars['String']['input']>;
+  startDate?: InputMaybe<Scalars['String']['input']>;
+  title?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type Query = {
   __typename?: 'Query';
+  events: Array<Event>;
+  followedEvents: Array<Event>;
   hello: Scalars['String']['output'];
+  joinedEvents: Array<Event>;
   me?: Maybe<User>;
+  myEvents: Array<Event>;
 };
 
 export type User = {
@@ -110,6 +179,7 @@ export type DirectiveResolverFn<TResult = Record<PropertyKey, never>, TParent = 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  Event: ResolverTypeWrapper<Event>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
@@ -120,6 +190,7 @@ export type ResolversTypes = {
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Boolean: Scalars['Boolean']['output'];
+  Event: Event;
   ID: Scalars['ID']['output'];
   Mutation: Record<PropertyKey, never>;
   Query: Record<PropertyKey, never>;
@@ -127,13 +198,36 @@ export type ResolversParentTypes = {
   User: User;
 };
 
+export type EventResolvers<ContextType = any, ParentType extends ResolversParentTypes['Event'] = ResolversParentTypes['Event']> = {
+  creator?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
+  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  endDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  followers?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  location?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  participants?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
+  startDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  createEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationCreateEventArgs, 'endDate' | 'startDate' | 'title'>>;
+  deleteEvent?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteEventArgs, 'id'>>;
+  followEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationFollowEventArgs, 'id'>>;
+  joinEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationJoinEventArgs, 'id'>>;
+  leaveEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationLeaveEventArgs, 'id'>>;
   loginWithGoogle?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationLoginWithGoogleArgs, 'code'>>;
+  unfollowEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationUnfollowEventArgs, 'id'>>;
+  updateEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationUpdateEventArgs, 'id'>>;
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
+  events?: Resolver<Array<ResolversTypes['Event']>, ParentType, ContextType>;
+  followedEvents?: Resolver<Array<ResolversTypes['Event']>, ParentType, ContextType>;
   hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  joinedEvents?: Resolver<Array<ResolversTypes['Event']>, ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
+  myEvents?: Resolver<Array<ResolversTypes['Event']>, ParentType, ContextType>;
 };
 
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
@@ -145,6 +239,7 @@ export type UserResolvers<ContextType = any, ParentType extends ResolversParentT
 };
 
 export type Resolvers<ContextType = any> = {
+  Event?: EventResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
   User?: UserResolvers<ContextType>;

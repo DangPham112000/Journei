@@ -11,18 +11,23 @@
   },
   "dependencies": {
     "@apollo/server": "^4.10.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
+    "google-auth-library": "^10.6.2",
     "graphql": "^16.8.1",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^8.3.2"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^7.0.0",
     "@graphql-codegen/typescript": "^6.0.0",
     "@graphql-codegen/typescript-resolvers": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.12.7",
     "eslint": "^9.1.1",
     "nodemon": "^3.1.0",

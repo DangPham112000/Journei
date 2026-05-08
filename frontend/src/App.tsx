@@ -1,23 +1,32 @@
-import { ApolloClient, InMemoryCache, ApolloProvider, HttpLink } from '@apollo/client';
-import { Container, Grid, Typography, Box } from '@mui/material';
+import { Container, Grid, Typography, Box, CircularProgress } from '@mui/material';
 import MapComponent from './components/Map';
 import JourneyPlanner from './components/JourneyPlanner';
 import LocationInput from './components/LocationInput';
-
-// Initialize Apollo Client
-const client = new ApolloClient({
-  link: new HttpLink({
-    uri: import.meta.env.VITE_GRAPHQL_URI || 'http://localhost:4000/graphql',
-  }),
-  cache: new InMemoryCache(),
-});
+import { useMeQuery } from './__generated__/graphql';
+import { Navigate } from 'react-router-dom';
 
 function App() {
+  const { data, loading, error } = useMeQuery();
+
+  if (loading) {
+    return (
+      <Container className="h-screen flex items-center justify-center">
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (error || !data?.me) {
+    return <Navigate to="/login" replace />;
+  }
+
   return (
-    <ApolloProvider client={client}>
-      <Container maxWidth="xl" className="h-screen py-8 flex flex-col">
+    <Container maxWidth="xl" className="h-screen py-8 flex flex-col">
         <Typography variant="h3" component="h1" gutterBottom className="font-bold text-gray-800 text-center">
           Journey Planner
+        </Typography>
+        <Typography variant="subtitle1" gutterBottom className="text-gray-600 text-center mb-6">
+          Welcome, {data.me.name}!
         </Typography>
 
         <Grid container spacing={4} className="flex-grow min-h-0">
@@ -35,7 +44,6 @@ function App() {
           </Grid>
         </Grid>
       </Container>
-    </ApolloProvider>
   );
 }
 

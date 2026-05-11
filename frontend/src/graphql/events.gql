@@ -1,0 +1,126 @@
+query GetEvents {
+  events {
+    id
+    title
+    description
+    startDate
+    endDate
+    location
+    creator {
+      id
+      name
+    }
+    followers {
+      id
+      name
+    }
+    participants {
+      id
+      name
+    }
+  }
+}
+
+query GetMyEvents {
+  myEvents {
+    id
+    title
+    description
+    startDate
+    endDate
+    location
+    creator {
+      id
+      name
+    }
+    followers {
+      id
+      name
+    }
+    participants {
+      id
+      name
+    }
+  }
+}
+
+query GetJoinedEvents {
+  joinedEvents {
+    id
+    title
+    description
+    startDate
+    endDate
+    location
+    creator {
+      id
+      name
+    }
+    followers {
+      id
+      name
+    }
+    participants {
+      id
+      name
+    }
+  }
+}
+
+query GetFollowedEvents {
+  followedEvents {
+    id
+    title
+    description
+    startDate
+    endDate
+    location
+    creator {
+      id
+      name
+    }
+    followers {
+      id
+      name
+    }
+    participants {
+      id
+      name
+    }
+  }
+}
+
+mutation CreateEvent($title: String!, $description: String, $startDate: String!, $endDate: String!, $location: String, $autoFollow: Boolean) {
+  createEvent(title: $title, description: $description, startDate: $startDate, endDate: $endDate, location: $location, autoFollow: $autoFollow) {
+    id
+    title
+  }
+}
+
+mutation JoinEvent($id: ID!) {
+  joinEvent(id: $id) {
+    id
+  }
+}
+
+mutation LeaveEvent($id: ID!) {
+  leaveEvent(id: $id) {
+    id
+  }
+}
+
+mutation FollowEvent($id: ID!) {
+  followEvent(id: $id) {
+    id
+  }
+}
+
+mutation UnfollowEvent($id: ID!) {
+  unfollowEvent(id: $id) {
+    id
+  }
+}
+
+mutation DeleteEvent($id: ID!) {
+  deleteEvent(id: $id)
+}

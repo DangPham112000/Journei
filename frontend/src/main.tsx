@@ -6,6 +6,10 @@ import Login from './pages/Login.tsx'
 import { ApolloClient, InMemoryCache, ApolloProvider, HttpLink } from '@apollo/client';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import MainLayout from './layouts/MainLayout';
+import LandingPage from './pages/events/LandingPage';
+import DiscoverPage from './pages/events/DiscoverPage';
+import ManageEventsPage from './pages/events/ManageEventsPage';
 
 const client = new ApolloClient({
   link: new HttpLink({
@@ -28,8 +32,14 @@ createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
-            {/* For now, just allow access to App, we'll check auth via GraphQL later */}
-            <Route path="/" element={<App />} />
+
+            <Route element={<MainLayout />}>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/discover" element={<DiscoverPage />} />
+              <Route path="/manage" element={<ManageEventsPage />} />
+              <Route path="/app" element={<App />} />
+            </Route>
+
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </BrowserRouter>

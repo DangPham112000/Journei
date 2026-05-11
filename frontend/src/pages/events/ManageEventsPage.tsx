@@ -16,6 +16,8 @@ export default function ManageEventsPage() {
 
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
 
   // Form State
   const [title, setTitle] = useState('');
@@ -58,15 +60,28 @@ export default function ManageEventsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this event?')) {
+  const handleDeleteClick = (id: string) => {
+    setEventToDelete(id);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (eventToDelete) {
       try {
-        await deleteEvent({ variables: { id } });
+        await deleteEvent({ variables: { id: eventToDelete } });
         refetch();
       } catch (e) {
         console.error('Failed to delete event', e);
+      } finally {
+        setDeleteModalOpen(false);
+        setEventToDelete(null);
       }
     }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setEventToDelete(null);
   };
 
   return (
@@ -90,7 +105,7 @@ export default function ManageEventsPage() {
               <Box className="absolute top-2 right-2">
                 <Button size="small" color="error" variant="contained" onClick={(e) => {
                   e.stopPropagation();
-                  handleDelete(event.id);
+                  handleDeleteClick(event.id);
                 }}>
                   Delete
                 </Button>
@@ -125,6 +140,17 @@ export default function ManageEventsPage() {
         <DialogActions>
           <Button onClick={handleCreateClose}>Cancel</Button>
           <Button onClick={handleCreateSubmit} variant="contained" color="primary" disabled={!title || !startDate || !endDate}>Create</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={deleteModalOpen} onClose={handleCancelDelete}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to delete this event?</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelDelete}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} variant="contained" color="error">Delete</Button>
         </DialogActions>
       </Dialog>
     </div>

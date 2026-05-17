@@ -1,7 +1,9 @@
 import { useGoogleLogin } from '@react-oauth/google';
-import { Container, Typography, Box, Button, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useLoginWithGoogleMutation } from '../__generated__/graphql';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -28,32 +30,40 @@ export default function Login() {
   });
 
   return (
-    <Container maxWidth="sm" className="h-screen flex items-center justify-center">
-      <Box className="p-8 bg-white rounded-md shadow-md text-center flex flex-col gap-4">
-        <Typography variant="h4" component="h1" gutterBottom className="font-bold text-gray-800">
-          Welcome to Journey Planner
-        </Typography>
-        <Typography variant="body1" color="textSecondary" className="mb-4">
-          Please sign in or register to plan your trips and view your locations.
-        </Typography>
-        <Typography variant="body2" color="textSecondary" className="mb-6">
-          If you don't have an account, one will be created for you automatically.
-        </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          onClick={() => login()}
-          disabled={loading}
-        >
-          {loading ? <CircularProgress size={24} /> : 'Sign In / Register with Google'}
-        </Button>
-        {error && (
-          <Typography color="error" variant="body2" className="mt-2">
-            Failed to sign in. Please try again.
-          </Typography>
-        )}
-      </Box>
-    </Container>
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+      <Card className="w-full max-w-sm text-center">
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-2xl font-bold">Journey Planner</CardTitle>
+          <CardDescription>
+            Sign in or register to plan your trips.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            If you don't have an account, one will be created automatically.
+          </p>
+          <Button
+            className="w-full"
+            size="lg"
+            onClick={() => login()}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Please wait
+              </>
+            ) : (
+              'Continue with Google'
+            )}
+          </Button>
+          {error && (
+            <p className="text-sm text-destructive mt-2">
+              Failed to sign in. Please try again.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

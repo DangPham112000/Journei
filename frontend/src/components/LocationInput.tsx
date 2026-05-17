@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Box, TextField, Button } from '@mui/material';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const LocationInput: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
@@ -17,19 +18,17 @@ const LocationInput: React.FC = () => {
   };
 
   return (
-    <Box className="flex gap-2 w-full mt-4">
-      <TextField
-        fullWidth
-        size="small"
-        label="Paste Google Maps link or search location"
+    <div className="flex flex-col sm:flex-row gap-2 w-full mt-4">
+      <Input
+        className="flex-1"
+        placeholder="Paste Google Maps link or search location"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
-        variant="outlined"
       />
-      <Button variant="contained" color="primary" onClick={handleAddLocation}>
+      <Button onClick={handleAddLocation}>
         Add
       </Button>
-    </Box>
+    </div>
   );
 };
 

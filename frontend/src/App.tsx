@@ -1,18 +1,18 @@
-import { Container, Grid, Typography, Box, CircularProgress } from '@mui/material';
 import MapComponent from './components/Map';
 import JourneyPlanner from './components/JourneyPlanner';
 import LocationInput from './components/LocationInput';
 import { useMeQuery } from './__generated__/graphql';
 import { Navigate } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 
 function App() {
   const { data, loading, error } = useMeQuery();
 
   if (loading) {
     return (
-      <Container className="h-screen flex items-center justify-center">
-        <CircularProgress />
-      </Container>
+      <div className="h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
     );
   }
 
@@ -21,29 +21,34 @@ function App() {
   }
 
   return (
-    <Container maxWidth="xl" className="h-screen py-8 flex flex-col">
-        <Typography variant="h3" component="h1" gutterBottom className="font-bold text-gray-800 text-center">
+    <div className="container mx-auto h-[calc(100vh-4rem)] p-4 flex flex-col gap-4">
+      <div className="text-center shrink-0">
+        <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-1">
           Journey Planner
-        </Typography>
-        <Typography variant="subtitle1" gutterBottom className="text-gray-600 text-center mb-6">
+        </h1>
+        <p className="text-sm md:text-base text-gray-600">
           Welcome, {data.me.name}!
-        </Typography>
+        </p>
+      </div>
 
-        <Grid container spacing={4} className="flex-grow min-h-0">
-          <Grid item xs={12} md={4} className="flex flex-col h-full gap-4">
+      <div className="flex flex-col lg:flex-row gap-4 flex-grow min-h-0">
+        <div className="flex flex-col gap-4 w-full lg:w-1/3 shrink-0 lg:h-full">
+          <div className="flex-grow overflow-auto min-h-[300px] lg:min-h-0">
             <JourneyPlanner />
-            <Box className="flex-grow p-4 bg-white rounded-md shadow-md overflow-auto">
-                <Typography variant="h6" className="mb-2">Pinned Locations</Typography>
-                <LocationInput />
-                {/* TODO: List pinned locations here */}
-            </Box>
-          </Grid>
+          </div>
 
-          <Grid item xs={12} md={8} className="h-full">
-            <MapComponent />
-          </Grid>
-        </Grid>
-      </Container>
+          <div className="shrink-0 p-4 bg-white rounded-lg border shadow-sm">
+            <h2 className="text-lg font-semibold mb-3">Pinned Locations</h2>
+            <LocationInput />
+            {/* TODO: List pinned locations here */}
+          </div>
+        </div>
+
+        <div className="w-full lg:w-2/3 h-[400px] lg:h-full min-h-[400px] rounded-lg overflow-hidden border shadow-sm">
+          <MapComponent />
+        </div>
+      </div>
+    </div>
   );
 }
 

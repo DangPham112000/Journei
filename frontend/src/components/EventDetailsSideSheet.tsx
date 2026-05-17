@@ -1,6 +1,13 @@
-import { Drawer, Box, Typography, IconButton, Divider, List, ListItem, ListItemText } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import type { GetEventsQuery } from '../__generated__/graphql';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
+import { MapPin, CalendarClock, User, Users } from 'lucide-react';
 
 type EventType = GetEventsQuery['events'][0];
 
@@ -12,58 +19,91 @@ interface EventDetailsSideSheetProps {
 
 export default function EventDetailsSideSheet({ event, open, onClose }: EventDetailsSideSheetProps) {
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={onClose}
-      PaperProps={{
-        sx: { width: { xs: '100%', sm: 400 } }
-      }}
-    >
-      {event && (
-        <Box className="p-6">
-          <Box className="flex justify-between items-center mb-4">
-            <Typography variant="h5" className="font-bold">{event.title}</Typography>
-            <IconButton onClick={onClose}><CloseIcon /></IconButton>
-          </Box>
-          <Divider className="mb-4" />
+    <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <SheetContent side="bottom" className="h-[85vh] sm:h-full sm:w-[400px] sm:side-right sm:max-w-md flex flex-col p-0">
+        <SheetHeader className="p-4 border-b">
+          <SheetTitle className="text-xl font-bold">{event?.title}</SheetTitle>
+        </SheetHeader>
 
-          <Typography variant="subtitle1" className="font-bold mt-4">Description</Typography>
-          <Typography variant="body1" className="mb-4">{event.description || 'N/A'}</Typography>
+        {event && (
+          <ScrollArea className="flex-grow p-4">
+            <div className="space-y-6 pb-6">
+              <div>
+                <h4 className="text-sm font-semibold mb-1 text-muted-foreground">Description</h4>
+                <p className="text-sm">{event.description || 'N/A'}</p>
+              </div>
 
-          <Typography variant="subtitle1" className="font-bold">Location</Typography>
-          <Typography variant="body1" className="mb-4">{event.location || 'N/A'}</Typography>
+              <div className="space-y-3">
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-semibold mb-0.5 text-muted-foreground">Location</h4>
+                    <p className="text-sm">{event.location || 'N/A'}</p>
+                  </div>
+                </div>
 
-          <Typography variant="subtitle1" className="font-bold">Start Date</Typography>
-          <Typography variant="body1" className="mb-4">{new Date(event.startDate).toLocaleString()}</Typography>
+                <div className="flex items-start gap-2">
+                  <CalendarClock className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div className="space-y-1">
+                    <div>
+                      <h4 className="text-sm font-semibold mb-0.5 text-muted-foreground">Start</h4>
+                      <p className="text-sm">{new Date(event.startDate).toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold mb-0.5 text-muted-foreground">End</h4>
+                      <p className="text-sm">{new Date(event.endDate).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
 
-          <Typography variant="subtitle1" className="font-bold">End Date</Typography>
-          <Typography variant="body1" className="mb-4">{new Date(event.endDate).toLocaleString()}</Typography>
+                <div className="flex items-start gap-2">
+                  <User className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <div>
+                    <h4 className="text-sm font-semibold mb-0.5 text-muted-foreground">Creator</h4>
+                    <p className="text-sm">{event.creator.name}</p>
+                  </div>
+                </div>
+              </div>
 
-          <Typography variant="subtitle1" className="font-bold">Creator</Typography>
-          <Typography variant="body1" className="mb-4">{event.creator.name}</Typography>
+              <Separator />
 
-          <Divider className="my-4" />
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <h4 className="text-sm font-semibold">Participants ({event.participants.length})</h4>
+                  </div>
+                  {event.participants.length > 0 ? (
+                    <ul className="space-y-1 ml-6 text-sm">
+                      {event.participants.map(p => (
+                        <li key={p.id}>{p.name}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground ml-6">No participants yet.</p>
+                  )}
+                </div>
 
-          <Typography variant="subtitle1" className="font-bold">Participants ({event.participants.length})</Typography>
-          <List dense>
-            {event.participants.map(p => (
-              <ListItem key={p.id} disablePadding>
-                <ListItemText primary={p.name} />
-              </ListItem>
-            ))}
-          </List>
-
-          <Typography variant="subtitle1" className="font-bold mt-4">Followers ({event.followers.length})</Typography>
-          <List dense>
-            {event.followers.map(f => (
-              <ListItem key={f.id} disablePadding>
-                <ListItemText primary={f.name} />
-              </ListItem>
-            ))}
-          </List>
-        </Box>
-      )}
-    </Drawer>
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <h4 className="text-sm font-semibold">Followers ({event.followers.length})</h4>
+                  </div>
+                  {event.followers.length > 0 ? (
+                    <ul className="space-y-1 ml-6 text-sm">
+                      {event.followers.map(f => (
+                        <li key={f.id}>{f.name}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-sm text-muted-foreground ml-6">No followers yet.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </ScrollArea>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 }

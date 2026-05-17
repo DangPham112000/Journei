@@ -1,5 +1,4 @@
 import React from 'react';
-import { Box, Typography } from '@mui/material';
 import { APIProvider, Map as GoogleMap } from '@vis.gl/react-google-maps';
 
 const MapComponent: React.FC = () => {
@@ -7,16 +6,16 @@ const MapComponent: React.FC = () => {
 
   if (!mapApiKey) {
     return (
-      <Box className="flex flex-col items-center justify-center h-full bg-gray-100 border border-gray-300 p-4">
-        <Typography variant="h6" color="textSecondary">Map Component</Typography>
-        <Typography variant="body2" color="textSecondary">Please provide VITE_GOOGLE_MAPS_API_KEY in frontend/.env to load the map.</Typography>
+      <div className="flex flex-col items-center justify-center h-full bg-muted border p-4 text-center">
+        <h3 className="text-lg font-semibold text-muted-foreground">Map Component</h3>
+        <p className="text-sm text-muted-foreground mt-2">Please provide VITE_GOOGLE_MAPS_API_KEY in frontend/.env to load the map.</p>
         {/* TODO: Remove this placeholder once API key is provided */}
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Box className="w-full h-full min-h-[400px] border border-gray-300 rounded-md overflow-hidden relative">
+    <div className="w-full h-full min-h-[300px] md:min-h-[400px] overflow-hidden relative bg-muted/20">
       <APIProvider apiKey={mapApiKey}>
         <GoogleMap
           defaultCenter={{ lat: 48.8588377, lng: 2.2770206 }}
@@ -28,7 +27,7 @@ const MapComponent: React.FC = () => {
            {/* TODO: Render saved location pins here using AdvancedMarker */}
         </GoogleMap>
       </APIProvider>
-    </Box>
+    </div>
   );
 };
 

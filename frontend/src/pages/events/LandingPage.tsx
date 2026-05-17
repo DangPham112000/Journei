@@ -1,9 +1,10 @@
-import { Typography, Grid, CircularProgress, Box, Divider } from '@mui/material';
 import { useGetJoinedEventsQuery, useGetFollowedEventsQuery, useLeaveEventMutation, useUnfollowEventMutation, useJoinEventMutation, useMeQuery } from '../../__generated__/graphql';
 import EventCard from '../../components/EventCard';
 import EventDetailsSideSheet from '../../components/EventDetailsSideSheet';
 import { useState } from 'react';
 import type { GetEventsQuery } from '../../__generated__/graphql';
+import { Loader2 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 type EventType = GetEventsQuery['events'][0];
 
@@ -19,7 +20,13 @@ export default function LandingPage() {
 
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
 
-  if (loadingJoined || loadingFollowed) return <Box className="flex justify-center mt-8"><CircularProgress /></Box>;
+  if (loadingJoined || loadingFollowed) {
+    return (
+      <div className="flex justify-center mt-8">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   const refetchAll = () => {
     refetchJoined();
@@ -54,49 +61,47 @@ export default function LandingPage() {
   };
 
   return (
-    <div>
-      <Typography variant="h4" gutterBottom>My Dashboard</Typography>
+    <div className="container mx-auto px-4 py-6 md:py-8 max-w-7xl">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6">My Dashboard</h1>
 
-      <Box className="mb-8">
-        <Typography variant="h5" gutterBottom className="mt-6 mb-4">Events I Joined</Typography>
-        <Grid container spacing={3}>
+      <div className="mb-8">
+        <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Events I Joined</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {joinedData?.joinedEvents.map((event) => (
-            <Grid item xs={12} sm={6} md={4} key={event.id}>
-              <EventCard
-                event={event}
-                currentUserId={meData?.me?.id || ''}
-                onLeave={handleLeave}
-                onClick={setSelectedEvent}
-              />
-            </Grid>
+            <EventCard
+              key={event.id}
+              event={event}
+              currentUserId={meData?.me?.id || ''}
+              onLeave={handleLeave}
+              onClick={setSelectedEvent}
+            />
           ))}
-        </Grid>
+        </div>
         {(!joinedData?.joinedEvents || joinedData.joinedEvents.length === 0) && (
-          <Typography variant="body1" className="text-gray-500 mt-2">You haven't joined any events yet.</Typography>
+          <p className="text-muted-foreground mt-2 text-sm md:text-base">You haven't joined any events yet.</p>
         )}
-      </Box>
+      </div>
 
-      <Divider className="my-8" />
+      <Separator className="my-8" />
 
-      <Box className="mb-8">
-        <Typography variant="h5" gutterBottom className="mt-6 mb-4">Events I Followed</Typography>
-        <Grid container spacing={3}>
+      <div className="mb-8">
+        <h2 className="text-xl md:text-2xl font-semibold mb-4 text-gray-800">Events I Followed</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {followedData?.followedEvents.map((event) => (
-            <Grid item xs={12} sm={6} md={4} key={event.id}>
-              <EventCard
-                event={event}
-                currentUserId={meData?.me?.id || ''}
-                onJoin={handleJoin}
-                onUnfollow={handleUnfollow}
-                onClick={setSelectedEvent}
-              />
-            </Grid>
+            <EventCard
+              key={event.id}
+              event={event}
+              currentUserId={meData?.me?.id || ''}
+              onJoin={handleJoin}
+              onUnfollow={handleUnfollow}
+              onClick={setSelectedEvent}
+            />
           ))}
-        </Grid>
+        </div>
         {(!followedData?.followedEvents || followedData.followedEvents.length === 0) && (
-          <Typography variant="body1" className="text-gray-500 mt-2">You aren't following any events right now.</Typography>
+          <p className="text-muted-foreground mt-2 text-sm md:text-base">You aren't following any events right now.</p>
         )}
-      </Box>
+      </div>
 
       <EventDetailsSideSheet
         event={selectedEvent}

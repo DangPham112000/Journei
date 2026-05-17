@@ -1,9 +1,9 @@
-import { Typography, Grid, CircularProgress, Box } from '@mui/material';
 import { useGetEventsQuery, useJoinEventMutation, useFollowEventMutation, useMeQuery } from '../../__generated__/graphql';
 import EventCard from '../../components/EventCard';
 import EventDetailsSideSheet from '../../components/EventDetailsSideSheet';
 import { useState } from 'react';
 import type { GetEventsQuery } from '../../__generated__/graphql';
+import { Loader2 } from 'lucide-react';
 
 type EventType = GetEventsQuery['events'][0];
 
@@ -15,8 +15,14 @@ export default function DiscoverPage() {
 
   const [selectedEvent, setSelectedEvent] = useState<EventType | null>(null);
 
-  if (loading) return <Box className="flex justify-center mt-8"><CircularProgress /></Box>;
-  if (error) return <Typography color="error">Error loading events</Typography>;
+  if (loading) {
+    return (
+      <div className="flex justify-center mt-8">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  if (error) return <p className="text-destructive">Error loading events</p>;
 
   const handleJoin = async (id: string) => {
     try {
@@ -37,25 +43,24 @@ export default function DiscoverPage() {
   };
 
   return (
-    <div>
-      <Typography variant="h4" gutterBottom>Discover Events</Typography>
+    <div className="container mx-auto px-4 py-6 md:py-8 max-w-7xl">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6">Discover Events</h1>
 
-      <Grid container spacing={3}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {data?.events.map((event) => (
-          <Grid item xs={12} sm={6} md={4} key={event.id}>
-            <EventCard
-              event={event}
-              currentUserId={meData?.me?.id || ''}
-              onJoin={handleJoin}
-              onFollow={handleFollow}
-              onClick={setSelectedEvent}
-            />
-          </Grid>
+          <EventCard
+            key={event.id}
+            event={event}
+            currentUserId={meData?.me?.id || ''}
+            onJoin={handleJoin}
+            onFollow={handleFollow}
+            onClick={setSelectedEvent}
+          />
         ))}
-      </Grid>
+      </div>
 
       {data?.events.length === 0 && (
-        <Typography variant="body1" className="text-gray-500 mt-4">No events found.</Typography>
+        <p className="text-muted-foreground mt-4 text-sm md:text-base">No events found.</p>
       )}
 
       <EventDetailsSideSheet

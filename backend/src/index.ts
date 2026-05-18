@@ -30,12 +30,58 @@ app.use(cookieParser());
 // app.get('/auth/google', ...);
 // app.get('/auth/google/callback', ...);
 
+if (process.env.MOCK_MODE === 'true') {
+  app.get('/auth/mock', async (req, res) => {
+    try {
+      const { User } = await import('./models/User');
+      const mockUser = await User.findOne({ email: 'mockuser@example.com' });
+
+      if (!mockUser) {
+        return res.status(404).send('Mock user not found');
+      }
+
+      // Generate JWT for mock user
+      const token = jwt.sign(
+        { userId: mockUser._id, email: mockUser.email },
+        process.env.JWT_SECRET || 'your_jwt_secret',
+        { expiresIn: '1d' }
+      );
+
+      res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 24 * 60 * 60 * 1000 // 1 day
+      });
+
+      res.status(200).json({ message: 'Mock login successful', user: mockUser });
+    } catch (error) {
+      console.error('Error logging in mock user:', error);
+      res.status(500).send('Internal Server Error');
+    }
+  });
+}
+
 async function startServer() {
-  // Connect to MongoDB
+  // Setup MongoDB Connection
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/journey-planner';
-    await mongoose.connect(mongoUri);
-    console.log('Connected to MongoDB');
+    if (process.env.MOCK_MODE === 'true') {
+      console.log('Starting in MOCK MODE with in-memory database');
+      const { MongoMemoryServer } = await import('mongodb-memory-server');
+      const mongoServer = await MongoMemoryServer.create();
+      const mongoUri = mongoServer.getUri();
+
+      await mongoose.connect(mongoUri);
+      console.log('Connected to In-Memory MongoDB');
+
+      // Seed data
+      const { seedMockData } = await import('./utils/seed');
+      await seedMockData();
+    } else {
+      const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/journey-planner';
+      await mongoose.connect(mongoUri);
+      console.log('Connected to MongoDB');
+    }
   } catch (error) {
     console.error('Error connecting to MongoDB:', error);
   }

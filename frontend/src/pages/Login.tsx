@@ -29,6 +29,22 @@ export default function Login() {
     flow: 'auth-code',
   });
 
+  const handleMockLogin = async () => {
+    try {
+      const res = await fetch('http://localhost:4000/auth/mock');
+      if (res.ok) {
+        // Assume context will refetch or force a reload
+        window.location.href = '/';
+      } else {
+        console.error('Mock login failed');
+      }
+    } catch (err) {
+      console.error('Mock login error:', err);
+    }
+  };
+
+  const isMockMode = import.meta.env.VITE_MOCK_MODE === 'true';
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
       <Card className="w-full max-w-sm text-center">
@@ -42,21 +58,31 @@ export default function Login() {
           <p className="text-sm text-muted-foreground">
             If you don't have an account, one will be created automatically.
           </p>
-          <Button
-            className="w-full"
-            size="lg"
-            onClick={() => login()}
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Please wait
-              </>
-            ) : (
-              'Continue with Google'
-            )}
-          </Button>
+          {isMockMode ? (
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={handleMockLogin}
+            >
+              Mock Login (Development)
+            </Button>
+          ) : (
+            <Button
+              className="w-full"
+              size="lg"
+              onClick={() => login()}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Please wait
+                </>
+              ) : (
+                'Continue with Google'
+              )}
+            </Button>
+          )}
           {error && (
             <p className="text-sm text-destructive mt-2">
               Failed to sign in. Please try again.

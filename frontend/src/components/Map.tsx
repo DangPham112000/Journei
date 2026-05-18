@@ -3,9 +3,8 @@ import { APIProvider, Map as GoogleMap } from '@vis.gl/react-google-maps';
 
 const MapComponent: React.FC = () => {
   const mapApiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
-  const isMockMode = import.meta.env.VITE_MOCK_MODE === 'true';
 
-  if (!mapApiKey && !isMockMode) {
+  if (!mapApiKey) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-muted border p-4 text-center">
         <h3 className="text-lg font-semibold text-muted-foreground">Map Component</h3>
@@ -13,15 +12,6 @@ const MapComponent: React.FC = () => {
         {/* TODO: Remove this placeholder once API key is provided */}
       </div>
     );
-  }
-
-  if (isMockMode && !mapApiKey) {
-    return (
-      <div className="w-full h-full min-h-[300px] md:min-h-[400px] overflow-hidden relative bg-muted/20 flex flex-col items-center justify-center">
-        <h3 className="text-lg font-semibold text-muted-foreground">Mock Map View</h3>
-        <p className="text-sm text-muted-foreground mt-2">Google Maps is bypassed in MOCK_MODE.</p>
-      </div>
-    )
   }
 
   return (

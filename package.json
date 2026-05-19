@@ -6,7 +6,7 @@
     "backend"
   ],
   "scripts": {
-    "start": "MOCK_MODE=true VITE_MOCK_MODE=true concurrently \"yarn workspace backend dev:mock\" \"yarn dev:frontend\"",
+    "start": "cross-env MOCK_MODE=true VITE_MOCK_MODE=true concurrently \"yarn workspace backend dev:mock\" \"yarn dev:frontend\"",
     "start:prod": "concurrently \"yarn dev:backend\" \"yarn dev:frontend\"",
     "dev:backend": "yarn workspace backend dev",
     "dev:frontend": "yarn workspace frontend dev",

@@ -7,6 +7,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
+    "dev:mock": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/mock-index.ts",
     "generate": "graphql-codegen"
   },
   "dependencies": {
@@ -30,6 +31,8 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.12.7",
     "eslint": "^9.1.1",
+    "mongodb-memory-server": "^11.1.0",
+    "nock": "^14.0.15",
     "nodemon": "^3.1.0",
     "prettier": "^3.2.5",
     "ts-node": "^10.9.2",

@@ -4,3 +4,6 @@ build/
 .env
 .DS_Store
 app.log
+fe.log
+app2.log
+mongod.log

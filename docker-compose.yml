@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: journei-nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+
+  frontend:
+    image: ghcr.io/${GITHUB_REPOSITORY_LOWER}/journei-frontend:latest
+    container_name: journei-frontend
+    # Note: We don't expose ports directly, Nginx proxy handles routing
+    restart: always
+    environment:
+      - VITE_GOOGLE_MAPS_API_KEY=${VITE_GOOGLE_MAPS_API_KEY}
+      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+
+  backend:
+    image: ghcr.io/${GITHUB_REPOSITORY_LOWER}/journei-backend:latest
+    container_name: journei-backend
+    restart: always
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/journey-planner
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - NODE_ENV=production
+      - FRONTEND_URL=http://${DOMAIN} # or https://${DOMAIN} if using SSL
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest
+    container_name: journei-mongodb
+    restart: always
+    volumes:
+      - mongodb_data:/data/db
+    # Not exposing port to host for security; backend connects via internal Docker network
+
+volumes:
+  mongodb_data:

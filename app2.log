@@ -1,0 +1,168 @@
+yarn workspace v1.22.22
+yarn run v1.22.22
+warning package.json: No license field
+$ nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/mock-index.ts
+[33m[nodemon] 3.1.14[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): src/**/*.ts[39m
+[33m[nodemon] watching extensions: ts,json[39m
+[32m[nodemon] starting `ts-node src/mock-index.ts`[39m
+Initializing Mock Layer...
+Google API mocks applied.
+Connected to In-Memory MongoDB in wrapper
+Seeding mock data for development mode...
+Mock data seeded successfully.
+Error: Cannot find module './index.js'
+Require stack:
+- /app/backend/src/mock-index.ts
+    at Function.<anonymous> (node:internal/modules/cjs/loader:1383:15)
+    at Function.Module._resolveFilename.sharedData.moduleResolveFilenameHook.installedValue [as _resolveFilename] (/app/node_modules/@cspotcode/source-map-support/source-map-support.js:811:30)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1025:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1030:22)
+    at Function._load (node:internal/modules/cjs/loader:1192:37)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:237:24)
+    at Module.require (node:internal/modules/cjs/loader:1463:12)
+    at require (node:internal/modules/helpers:147:16)
+    at /app/backend/src/mock-index.ts:85:3 {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [ '/app/backend/src/mock-index.ts' ]
+}
+[31m[nodemon] app crashed - waiting for file changes before starting...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/mock-index.ts`[39m
+Initializing Mock Layer...
+Google API mocks applied.
+Connected to In-Memory MongoDB in wrapper
+Seeding mock data for development mode...
+Mock data seeded successfully.
+Connected to MongoDB
+Server is running at http://localhost:4000
+GraphQL endpoint at http://localhost:4000/graphql
+Error during Google login: GaxiosError: Failed to retrieve verification certificates: request to https://www.googleapis.com/oauth2/v1/certs failed, reason: Nock: No match for request {
+  "method": "GET",
+  "url": "https://www.googleapis.com/oauth2/v1/certs",
+  "headers": {
+    "accept": "*/*",
+    "accept-encoding": "gzip, deflate, br",
+    "connection": "close",
+    "user-agent": "google-api-nodejs-client/10.6.2",
+    "x-goog-api-client": "gl-node/22.22.1"
+  }
+}
+    at Gaxios._request (/app/node_modules/gaxios/src/gaxios.ts:227:15)
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at runNextTicks (node:internal/process/task_queues:68:3)
+    at processTimers (node:internal/timers:518:9)
+    at async OAuth2Client.getFederatedSignonCertsAsync (/app/node_modules/google-auth-library/build/src/auth/oauth2client.js:605:19)
+    at async OAuth2Client.verifyIdTokenAsync (/app/node_modules/google-auth-library/build/src/auth/oauth2client.js:540:26)
+    at async Object.loginWithGoogle (/app/backend/src/graphql/resolvers.ts:52:24) {
+  config: {
+    retry: true,
+    retryConfig: {
+      httpMethodsToRetry: [Array],
+      currentRetryAttempt: 2,
+      retry: 3,
+      noResponseRetries: 2,
+      retryDelayMultiplier: 2,
+      timeOfFirstRequest: 1779191963982,
+      totalTimeout: 9007199254740991,
+      maxRetryDelay: 9007199254740991,
+      statusCodesToRetry: [Array]
+    },
+    url: URL {
+      href: 'https://www.googleapis.com/oauth2/v1/certs',
+      origin: 'https://www.googleapis.com',
+      protocol: 'https:',
+      username: '',
+      password: '',
+      host: 'www.googleapis.com',
+      hostname: 'www.googleapis.com',
+      port: '',
+      pathname: '/oauth2/v1/certs',
+      search: '',
+      searchParams: URLSearchParams {},
+      hash: ''
+    },
+    validateStatus: [Function: validateStatus],
+    responseType: 'unknown',
+    errorRedactor: [Function: defaultErrorRedactor],
+    headers: Headers {
+      'x-goog-api-client': 'gl-node/22.22.1',
+      'User-Agent': 'google-api-nodejs-client/10.6.2'
+    }
+  },
+  response: undefined,
+  code: 'ERR_NOCK_NO_MATCH',
+  status: undefined,
+  error: FetchError: request to https://www.googleapis.com/oauth2/v1/certs failed, reason: Nock: No match for request {
+    "method": "GET",
+    "url": "https://www.googleapis.com/oauth2/v1/certs",
+    "headers": {
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, br",
+      "connection": "close",
+      "user-agent": "google-api-nodejs-client/10.6.2",
+      "x-goog-api-client": "gl-node/22.22.1"
+    }
+  }
+      at ClientRequest.<anonymous> (file:///app/node_modules/node-fetch/src/index.js:108:11)
+      at ClientRequest.emit (node:events:519:28)
+      at ClientRequest.emit (node:domain:489:12)
+      at emitErrorEvent (node:_http_client:108:11)
+      at MockHttpSocket.socketErrorListener (node:_http_client:575:5)
+      at MockHttpSocket.emit (node:events:519:28)
+      at MockHttpSocket.emit (node:domain:489:12)
+      at MockHttpSocket.emit (/app/node_modules/@mswjs/interceptors/src/interceptors/ClientRequest/MockHttpSocket.ts:165:12)
+      at MockHttpSocket.destroy (/app/node_modules/@mswjs/interceptors/src/interceptors/ClientRequest/MockHttpSocket.ts:175:12)
+      at MockHttpSocket.errorWith (/app/node_modules/@mswjs/interceptors/src/interceptors/ClientRequest/MockHttpSocket.ts:458:10) {
+    type: 'system',
+    errno: 'ERR_NOCK_NO_MATCH',
+    code: 'ERR_NOCK_NO_MATCH',
+    erroredSysCall: undefined
+  },
+  [Symbol(gaxios-gaxios-error)]: '7.1.4',
+  [cause]: FetchError: request to https://www.googleapis.com/oauth2/v1/certs failed, reason: Nock: No match for request {
+    "method": "GET",
+    "url": "https://www.googleapis.com/oauth2/v1/certs",
+    "headers": {
+      "accept": "*/*",
+      "accept-encoding": "gzip, deflate, br",
+      "connection": "close",
+      "user-agent": "google-api-nodejs-client/10.6.2",
+      "x-goog-api-client": "gl-node/22.22.1"
+    }
+  }
+      at ClientRequest.<anonymous> (file:///app/node_modules/node-fetch/src/index.js:108:11)
+      at ClientRequest.emit (node:events:519:28)
+      at ClientRequest.emit (node:domain:489:12)
+      at emitErrorEvent (node:_http_client:108:11)
+      at MockHttpSocket.socketErrorListener (node:_http_client:575:5)
+      at MockHttpSocket.emit (node:events:519:28)
+      at MockHttpSocket.emit (node:domain:489:12)
+      at MockHttpSocket.emit (/app/node_modules/@mswjs/interceptors/src/interceptors/ClientRequest/MockHttpSocket.ts:165:12)
+      at MockHttpSocket.destroy (/app/node_modules/@mswjs/interceptors/src/interceptors/ClientRequest/MockHttpSocket.ts:175:12)
+      at MockHttpSocket.errorWith (/app/node_modules/@mswjs/interceptors/src/interceptors/ClientRequest/MockHttpSocket.ts:458:10) {
+    type: 'system',
+    errno: 'ERR_NOCK_NO_MATCH',
+    code: 'ERR_NOCK_NO_MATCH',
+    erroredSysCall: undefined
+  }
+}
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/mock-index.ts`[39m
+Initializing Mock Layer...
+Google API mocks applied.
+Connected to In-Memory MongoDB in wrapper
+Seeding mock data for development mode...
+Mock data seeded successfully.
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `ts-node src/mock-index.ts`[39m
+Initializing Mock Layer...
+Google API mocks applied.
+Connected to In-Memory MongoDB in wrapper
+Seeding mock data for development mode...
+Mock data seeded successfully.
+Connected to MongoDB
+Server is running at http://localhost:4000
+GraphQL endpoint at http://localhost:4000/graphql

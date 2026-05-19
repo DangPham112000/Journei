@@ -43,6 +43,27 @@ async function startMockLayer() {
       picture: 'https://via.placeholder.com/150',
     });
 
+  // Since google-auth-library verifies certificates cryptographically, we can't easily mock `/certs`.
+  // The easiest way to mock `verifyIdToken` is to intercept the method on OAuth2Client prototype.
+  const { OAuth2Client } = require('google-auth-library');
+  OAuth2Client.prototype.verifyIdToken = async function() {
+    return {
+      getPayload: () => ({
+        sub: 'mock-google-id-12345',
+        email: 'mockuser@example.com',
+        name: 'Mock User',
+        picture: 'https://via.placeholder.com/150',
+      })
+    };
+  };
+
+  nock('https://www.googleapis.com')
+    .persist()
+    .get('/oauth2/v1/certs')
+    .reply(200, {
+      "mock-key-id": "mock-certificate"
+    });
+
   // Mock Calendar API calls if they happen
   nock('https://www.googleapis.com')
     .persist()
@@ -82,7 +103,7 @@ async function startMockLayer() {
   await mongoose.disconnect();
 
   // Load the main index
-  import('./index.js');
+  require('./index.ts');
 }
 
 startMockLayer().catch((err) => {

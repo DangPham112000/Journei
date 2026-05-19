@@ -30,25 +30,49 @@ A web application to plan your journeys. This app allows you to choose dates for
 - MongoDB instance (local or MongoDB Atlas)
 - Google Cloud Project with Calendar API and Maps JavaScript API enabled.
 
-### Setup Instructions
-We use [Yarn Workspaces](https://yarnpkg.com/features/workspaces) to manage both the frontend and backend dependencies from the root directory.
+### Local Development
+
+We use [Yarn Workspaces](https://yarnpkg.com/features/workspaces) to manage dependencies.
 
 1. Ensure you are in the root directory.
-2. Install dependencies for both frontend and backend: `yarn install`
-3. Set up the environment files:
-   - **Backend:** In the `backend` directory, create a `.env` file based on the provided instructions (requires MongoDB URI and Google credentials).
-   - **Frontend:** In the `frontend` directory, create a `.env` file with your Google Maps API key and Backend URL.
+2. Install dependencies for all workspaces: `yarn install`
+3. Run the development environment:
+   ```bash
+   yarn start
+   ```
 
-### Running the App
-You can run both the frontend and backend development servers concurrently from the root directory:
+**Mock Mode Details:**
+By default, `yarn start` spins up the application in a sandboxed **Mock Mode**. You do not need any environment variables or external API keys to start working!
+- **Database:** An in-memory MongoDB instance is automatically created and seeded with a mock user and events.
+- **Authentication:** Google OAuth is bypassed via a local mock endpoint.
+- **Maps:** Google Maps integration is mocked seamlessly via Vite aliases.
 
-```bash
-yarn start
-```
+### Production Deployment
 
-Alternatively, you can run them individually:
-- Run backend: `yarn run dev:backend`
-- Run frontend: `yarn run dev:frontend`
+To run the application in a standard production environment, you need to build the code and configure real environment variables.
+
+1. **Build Workspaces:**
+   ```bash
+   yarn build:backend
+   yarn build:frontend
+   ```
+
+2. **Configure Environment Variables:**
+   - **Backend** (`backend/.env`):
+     - `MONGODB_URI`: Connection string to your production MongoDB cluster.
+     - `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`: Credentials from Google Cloud.
+     - `JWT_SECRET`: A secure, random string for signing session tokens.
+     - `NODE_ENV`: Set to `production`.
+   - **Frontend** (`frontend/.env`):
+     - `VITE_GOOGLE_MAPS_API_KEY`: A valid Maps API Key.
+     - `VITE_GOOGLE_CLIENT_ID`: The same Client ID used in the backend.
+
+3. **Start the Production App:**
+   From the root directory, start both the real backend and frontend:
+   ```bash
+   yarn start:prod
+   ```
+   *(Note: For an actual server deployment, you will typically run `node dist/index.js` in the `backend` folder and serve the `frontend/dist` folder using a static host like Nginx, Vercel, or Netlify.)*
 
 ### GraphQL Code Generation
 This project uses GraphQL Code Generator to automatically create TypeScript types and Apollo hooks from `.gql` files.

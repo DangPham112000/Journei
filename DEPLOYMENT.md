@@ -120,9 +120,9 @@ Before the first deployment, you need to prepare the application directory and e
    ```
 3. Create the `.env` file for Docker Compose:
    ```bash
-   nano .env
+   vim .env
    ```
-4. Paste the following configuration, filling in your specific details:
+4. Paste the following configuration, filling in your specific details (press `i` to enter insert mode):
    ```env
    # Frontend Variables
    VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
@@ -134,11 +134,19 @@ Before the first deployment, you need to prepare the application directory and e
    JWT_SECRET=a_super_secure_random_string_here
    DOMAIN=journei.yourdomain.com
    ```
-5. Save and exit (`Ctrl+O`, `Enter`, `Ctrl+X`).
+5. Save and exit (press `Esc`, type `:wq`, and press `Enter`).
 
 6. You also need to manually copy the `docker-compose.yml` and `nginx/nginx.conf` files to your VPS for the first run.
-   - Create `nginx/nginx.conf` matching the one in the repository.
-   - Create `docker-compose.yml` matching the one in the repository.
+   - Create `nginx/nginx.conf` matching the one in the repository:
+     - Run `vim nginx/nginx.conf`.
+     - Press `i` to enter insert mode.
+     - Paste the contents of the `nginx/nginx.conf` file from the repository.
+     - Press `Esc`, type `:wq`, and press `Enter` to save and exit.
+   - Create `docker-compose.yml` matching the one in the repository:
+     - Run `vim docker-compose.yml`.
+     - Press `i` to enter insert mode.
+     - Paste the contents of the `docker-compose.yml` file from the repository.
+     - Press `Esc`, type `:wq`, and press `Enter` to save and exit.
 
 ---
 

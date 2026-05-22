@@ -50,6 +50,16 @@ sudo usermod -aG docker $USER
 ```
 *(Note: After adding your user to the docker group, you may need to log out and log back in, or run `su - $USER`)*
 
+**Command Explanations:**
+* `sudo apt-get update`: Refreshes the local package index to ensure you have access to the latest available versions of software packages.
+* `sudo apt-get install ca-certificates curl gnupg`: Installs essential tools required to securely download and verify the Docker repository. `ca-certificates` allows SSL-based applications to check for the authenticity of connections, `curl` is used to download files from the internet, and `gnupg` handles encryption and signing keys.
+* `sudo install -m 0755 -d /etc/apt/keyrings`: Creates a directory with specific permissions (`0755`) to securely store repository keys.
+* `curl -fsSL ... | sudo gpg --dearmor ...`: Securely downloads Docker's official GPG encryption key and converts it into a format that the package manager (`apt`) can read, saving it to the newly created keyrings directory.
+* `sudo chmod a+r ...`: Modifies the permissions of the GPG key file so that it is readable by all users, which is necessary for `apt` to verify packages.
+* `echo "deb ..."`: Sets up the official Docker repository source location so your system knows exactly where to download Docker Engine packages for your specific Ubuntu version (`$VERSION_CODENAME`) and architecture.
+* `sudo apt-get install docker-ce ...`: Installs the core components of Docker: `docker-ce` (Community Edition engine), `docker-ce-cli` (command-line interface), `containerd.io` (container runtime), `docker-buildx-plugin` (build capabilities), and `docker-compose-plugin` (to run multi-container applications).
+* `sudo usermod -aG docker $USER`: Appends (`-a`) your current user to the `docker` group (`-G`), granting the necessary permissions to execute Docker commands without having to prefix them with `sudo`.
+
 ### Set up SSH Key for GitHub Actions
 
 GitHub Actions needs a way to securely connect to your VPS.
@@ -58,6 +68,12 @@ GitHub Actions needs a way to securely connect to your VPS.
    ```bash
    ssh-keygen -t ed25519 -C "github-actions-deploy" -f ./github-actions-key
    ```
+   **Command Explanations:**
+   * `ssh-keygen`: The utility used to generate a new SSH key pair for secure authentication.
+   * `-t ed25519`: Specifies the type of key to create. `ed25519` is a modern, highly secure, and fast cryptographic algorithm recommended for SSH keys.
+   * `-C "github-actions-deploy"`: Adds a comment to the key, making it easier to identify its purpose later.
+   * `-f ./github-actions-key`: Specifies the filename and path where the generated key pair should be saved in the current directory, instead of the default `~/.ssh/id_ed25519`.
+
 2. You will get two files: `github-actions-key` (private) and `github-actions-key.pub` (public).
 3. Copy the contents of the **public key** (`cat ./github-actions-key.pub`).
 4. On your **VPS**, add the public key to the `~/.ssh/authorized_keys` file:
@@ -65,6 +81,10 @@ GitHub Actions needs a way to securely connect to your VPS.
    echo "YOUR_PUBLIC_KEY_CONTENTS_HERE" >> ~/.ssh/authorized_keys
    chmod 600 ~/.ssh/authorized_keys
    ```
+   **Command Explanations:**
+   * `echo ... >> ~/.ssh/authorized_keys`: Appends the public key you generated to the `authorized_keys` file on the server. This file acts as a whitelist; anyone presenting the corresponding private key will be granted access. The `>>` operator ensures the key is added to the end of the file without overwriting any existing keys.
+   * `chmod 600 ~/.ssh/authorized_keys`: Restricts the file permissions so that only the owner can read and write to it. SSH enforces strict permission checks for security reasons; if this file is readable by other users, SSH will refuse to use it.
+
 5. Save the **private key** (`github-actions-key`) for Step 4.
 
 ---

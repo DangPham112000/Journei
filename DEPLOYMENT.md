@@ -144,21 +144,43 @@ Before the first deployment, you need to prepare the application directory and e
 
 ## 4. GitHub Repository Setup (Secrets)
 
-Your GitHub repository needs specific secrets to push Docker images and log into your VPS.
+Your GitHub Actions automated workflow needs special permissions and sensitive information to do its job. Specifically, it needs to be able to upload (push) the Docker images it builds to GitHub's Container Registry, and it needs to securely log into your VPS to tell it to pull those new images.
 
-1. **Create a Personal Access Token (PAT):**
-   - Go to your GitHub Settings -> Developer settings -> Personal access tokens -> Tokens (classic).
-   - Click **Generate new token (classic)**.
-   - Give it a name (e.g., `GHCR Deploy`).
-   - Check the `write:packages` and `read:packages` scopes.
-   - Generate and copy the token.
-2. **Add Repository Secrets:**
-   - Go to your GitHub repository -> Settings -> Secrets and variables -> Actions.
-   - Click **New repository secret** and add the following:
-     - `VPS_IP`: The IP address of your Ubuntu server.
-     - `VPS_USERNAME`: Your SSH username on the VPS (e.g., `ubuntu` or `root`).
-     - `VPS_SSH_KEY`: The entire contents of the **private** SSH key you generated in Step 1.
-     - `GHCR_PAT`: The Personal Access Token you just created in Step 4.1.
+Because this information is sensitive (like passwords and private keys), you should never hardcode it into your files. Instead, GitHub provides a secure feature called "Secrets".
+
+Here is how to set them up:
+
+### 4.1 Create a Personal Access Token (PAT)
+
+A Personal Access Token (PAT) acts as a secure password or an API key. Our automated workflow uses this token to prove to GitHub that it is allowed to upload our Docker images to the GitHub Container Registry (GHCR).
+
+1. **Navigate to Developer Settings:** Click on your profile picture in the top right corner of GitHub, then click **Settings**. Scroll down the left sidebar to the very bottom and click **Developer settings**.
+2. **Go to Tokens:** In the left sidebar, expand **Personal access tokens** and select **Tokens (classic)**.
+3. **Generate a new token:** Click the **Generate new token** button in the top right, and choose **Generate new token (classic)**. You may be asked to confirm your password.
+4. **Configure the token:**
+   - **Note:** Give it a descriptive name so you remember what it's for, like `GHCR Deploy`.
+   - **Expiration:** Choose how long the token is valid for (e.g., 30 days, 90 days, or No expiration). For security, it's generally better to set an expiration, but "No expiration" is easier for setting up and forgetting.
+   - **Select scopes:** This is where you give the token specific permissions. Scroll down to the **write:packages** option and check the box. Doing so will automatically check the **read:packages** box as well. This allows the workflow to upload and download Docker images associated with your account.
+5. **Save the token:** Scroll to the bottom and click **Generate token**.
+   - **IMPORTANT:** Copy the token immediately and save it somewhere temporarily (like a secure notepad). **You will not be able to see it again once you leave the page!**
+
+### 4.2 Add Repository Secrets
+
+Now that you have your PAT and your SSH keys from Step 1, you need to store them securely inside your specific repository.
+
+1. **Navigate to Repository Secrets:** Go to your project's main repository page on GitHub. Click the **Settings** tab near the top. On the left sidebar, expand **Secrets and variables** and click on **Actions**.
+2. **Add new secrets:** Click the green **New repository secret** button. You will repeat this process four times to create four different secrets. The "Name" must match exactly what is written below, as the workflow specifically looks for these names.
+
+Add the following secrets:
+
+- **Name:** `VPS_IP`
+  - **Secret:** `123.45.67.89` (Replace this with the actual IP address of your Ubuntu server. The workflow uses this to know where your server is located on the internet).
+- **Name:** `VPS_USERNAME`
+  - **Secret:** `ubuntu` (or `root`, or whatever username you use to log into your server. The workflow uses this alongside the IP address to initiate the connection).
+- **Name:** `VPS_SSH_KEY`
+  - **Secret:** Paste the entire contents of the **private** SSH key (`github-actions-key`) you generated in Step 1. (This acts as the highly secure password that proves the automated workflow has the right to log into your server as the `VPS_USERNAME`).
+- **Name:** `GHCR_PAT`
+  - **Secret:** Paste the Personal Access Token you generated in step 4.1. (The workflow uses this to log into the GitHub Container Registry to upload the Docker images).
 
 ---
 

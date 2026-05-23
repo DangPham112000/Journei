@@ -193,5 +193,6 @@ Once everything above is set up, the deployment process is entirely automated!
 4. You will see the `Deploy to VPS` workflow running.
    - It will build the Frontend and Backend Docker images.
    - It will push those images to the GitHub Container Registry.
+   - It will securely copy the `docker-compose.yml` and `nginx/` directory to your VPS.
    - It will SSH into your VPS, pull the latest images, and restart the containers.
 5. Once the workflow is green, visit `https://journei.yourdomain.com` and your app will be live!

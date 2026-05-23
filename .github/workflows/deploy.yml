@@ -60,6 +60,15 @@ jobs:
         run: |
           echo "GITHUB_REPOSITORY_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
+      - name: Copy configuration files to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "docker-compose.yml,nginx/"
+          target: "~/journei"
+
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:

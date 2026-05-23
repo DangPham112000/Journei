@@ -42,7 +42,7 @@ To run this application properly with its full capabilities in production (or to
 #### 1. Obtaining a Google Maps API Key
 This key is used by the frontend to render the interactive map and handle location coordinates.
 
-1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+1. Go to the <a href="https://console.cloud.google.com/" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>.
 2. Create a new project or select an existing one.
 3. Navigate to **APIs & Services > Library**.
 4. Search for and enable the **Maps JavaScript API**.

@@ -96,4 +96,9 @@ jobs:
             sed -i "s/server_name _;/server_name ${DOMAIN_VALUE};/g" nginx/nginx.conf
 
             # Restart the services
+            # We first recreate the frontend and backend containers so they get their new IPs
             docker compose up -d
+
+            # Force recreating nginx-proxy to pick up the new configuration file inode
+            # and to freshly resolve the new DNS IPs of the upstream containers
+            docker compose up -d --force-recreate nginx-proxy

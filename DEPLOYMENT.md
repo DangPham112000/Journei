@@ -208,19 +208,16 @@ Once everything above is set up, the deployment process is entirely automated!
 When deploying using Docker Compose, you may sometimes encounter a "502 Bad Gateway" error from Nginx, or see "Connection Refused" in the Nginx logs indicating it cannot reach the `frontend` or `backend` containers.
 
 **Cause:**
-By default, Nginx resolves domain names (like `frontend` and `backend`) to IP addresses exactly once when the Nginx process starts, and then caches those IP addresses indefinitely. When GitHub Actions triggers a new deployment, Docker Compose pulls the updated frontend and backend images and recreates those specific containers. In Docker's internal network, recreated containers often receive *new* internal IP addresses. Because the `nginx-proxy` container's configuration didn't change, it is not recreated, and it continues trying to proxy traffic to the old, stale IP addresses of the destroyed containers.
+By default, Nginx resolves domain names (like `frontend` and `backend`) to IP addresses exactly once when the Nginx process starts. When GitHub Actions triggers a new deployment, Docker Compose recreates the frontend and backend containers, which causes them to swap internal IP addresses or receive new ones. If the `nginx-proxy` container is not restarted, it continues attempting to proxy traffic to the old IP addresses, resulting in `502 Bad Gateway` and `Connection Refused` errors until it is restarted.
+
+Additionally, our deployment script uses `sed -i` to inject the domain name into `nginx/nginx.conf`. Because `sed -i` creates a new file inode under the hood, a running container with a single-file bind mount (`./nginx/nginx.conf:/etc/nginx/nginx.conf:ro`) becomes detached from the updated file on the host.
 
 **Solution:**
-The project's `nginx/nginx.conf` handles this by using Docker's internal DNS resolver (`127.0.0.11`) and shifting the `proxy_pass` destinations into variables:
+The project's GitHub Actions workflow (`.github/workflows/deploy.yml`) handles this by forcefully recreating the `nginx-proxy` container after updating the configuration file and pulling new images:
 
-```nginx
-resolver 127.0.0.11 valid=30s;
-
-# Example location
-location / {
-    set $frontend http://frontend:80;
-    proxy_pass $frontend;
-}
+```bash
+docker compose up -d --force-recreate nginx-proxy
+docker compose up -d
 ```
 
-By using variables (`$frontend`), Nginx is forced to re-evaluate and dynamically resolve the hostname to an IP address at runtime, allowing it to seamlessly detect the new IP addresses of containers after a deployment. If you ever rewrite the Nginx configuration, ensure you maintain this dynamic resolution pattern.
+Forcing recreation ensures that the proxy cleanly restarts (flushing its internal DNS cache and picking up the new IPs) and successfully mounts the new `nginx.conf` inode. No variable-based `proxy_pass` tricks or custom `resolver` settings are required in `nginx.conf` when the container is recreated on every deployment.

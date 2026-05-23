@@ -80,4 +80,4 @@ jobs:
             docker pull ghcr.io/$GITHUB_REPOSITORY_LOWER-backend:latest
 
             # Restart the services
-            docker-compose up -d
+            docker compose up -d

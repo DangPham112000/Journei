@@ -8,15 +8,20 @@ A web application to plan your journeys. This app allows you to choose dates for
 - React 19
 - Vite
 - TypeScript
-- Material UI (MUI)
 - Tailwind CSS
+- Shadcn UI
+- Base UI
 - Apollo Client
+- Google Maps React (`@vis.gl/react-google-maps`)
+- React OAuth Google (`@react-oauth/google`)
 
 **Backend:**
 - Express.js
 - GraphQL (Apollo Server)
 - TypeScript
 - MongoDB (via Mongoose)
+- Google Auth Library
+- JWT & Cookie Parser
 
 ## Project Structure
 
@@ -29,6 +34,46 @@ A web application to plan your journeys. This app allows you to choose dates for
 - Node.js (v18 or higher recommended)
 - MongoDB instance (local or MongoDB Atlas)
 - Google Cloud Project with Calendar API and Maps JavaScript API enabled.
+
+### Google Integration
+
+To run this application properly with its full capabilities in production (or to disable local Mock Mode), you need to configure integrations with Google APIs. This provides map interactions and user authentication with Google Calendar.
+
+#### 1. Obtaining a Google Maps API Key
+This key is used by the frontend to render the interactive map and handle location coordinates.
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a new project or select an existing one.
+3. Navigate to **APIs & Services > Library**.
+4. Search for and enable the **Maps JavaScript API**.
+5. Go to **APIs & Services > Credentials**.
+6. Click **Create Credentials** and select **API key**.
+7. Copy the generated key.
+8. Set this as `VITE_GOOGLE_MAPS_API_KEY` in your frontend environment variables (`frontend/.env`).
+
+*(Note: It is highly recommended to restrict this API key to your specific domain or IP address in the Google Cloud Console to prevent unauthorized usage).*
+
+#### 2. Obtaining OAuth Credentials
+These credentials are used to authenticate users via Google OAuth and request access to their Google Calendar. The frontend needs the Client ID to initiate the login, and the backend needs both the Client ID and Client Secret to verify tokens securely.
+
+1. In the same Google Cloud Project, go to **APIs & Services > Library**.
+2. Search for and enable the **Google Calendar API**.
+3. Go to **APIs & Services > OAuth consent screen**.
+   - Choose "External" (or "Internal" if using Google Workspace).
+   - Fill in the required App information (App name, support email, developer contact).
+   - Under Scopes, add `.../auth/calendar.events` and `.../auth/userinfo.profile` (or similar required scopes).
+   - Add your test users if your app is in "Testing" status.
+4. Go to **APIs & Services > Credentials**.
+5. Click **Create Credentials** and select **OAuth client ID**.
+6. Choose **Web application** as the Application type.
+7. Add your application's URIs:
+   - **Authorized JavaScript origins**: e.g., `http://localhost:5173` (for local dev) or `https://journei.yourdomain.com` (for production).
+   - **Authorized redirect URIs**: Typically the same as your origin, or wherever your auth callback handles the response.
+8. Click **Create**. You will receive a **Client ID** and a **Client Secret**.
+9. Configure the environment variables:
+   - Add the Client ID to `frontend/.env` as `VITE_GOOGLE_CLIENT_ID`.
+   - Add the Client ID to `backend/.env` as `GOOGLE_CLIENT_ID`.
+   - Add the Client Secret to `backend/.env` as `GOOGLE_CLIENT_SECRET`.
 
 ### Local Development
 
@@ -49,30 +94,9 @@ By default, `yarn start` spins up the application in a sandboxed **Mock Mode**. 
 
 ### Production Deployment
 
-To run the application in a standard production environment, you need to build the code and configure real environment variables.
+The production deployment is fully automated using a **GitHub Actions CI/CD** pipeline. It orchestrates building Docker images for both the frontend and backend, pushing them to GitHub Container Registry (GHCR), and deploying them to a VPS using **Docker Compose**. We also utilize **Cloudflare** for DNS and SSL termination to serve the application on a subdomain.
 
-1. **Build Workspaces:**
-   ```bash
-   yarn build:backend
-   yarn build:frontend
-   ```
-
-2. **Configure Environment Variables:**
-   - **Backend** (`backend/.env`):
-     - `MONGODB_URI`: Connection string to your production MongoDB cluster.
-     - `GOOGLE_CLIENT_ID` & `GOOGLE_CLIENT_SECRET`: Credentials from Google Cloud.
-     - `JWT_SECRET`: A secure, random string for signing session tokens.
-     - `NODE_ENV`: Set to `production`.
-   - **Frontend** (`frontend/.env`):
-     - `VITE_GOOGLE_MAPS_API_KEY`: A valid Maps API Key.
-     - `VITE_GOOGLE_CLIENT_ID`: The same Client ID used in the backend.
-
-3. **Start the Production App:**
-   From the root directory, start both the real backend and frontend:
-   ```bash
-   yarn start:prod
-   ```
-   *(Note: For an actual server deployment, you will typically run `node dist/index.js` in the `backend` folder and serve the `frontend/dist` folder using a static host like Nginx, Vercel, or Netlify.)*
+For a comprehensive, step-by-step guide on setting up the VPS, Docker, SSH keys, Cloudflare, and GitHub Secrets required for this automated workflow, please refer to the detailed [**DEPLOYMENT.md**](./DEPLOYMENT.md) documentation.
 
 ### GraphQL Code Generation
 This project uses GraphQL Code Generator to automatically create TypeScript types and Apollo hooks from `.gql` files.

@@ -4,7 +4,8 @@ export const APIProvider: React.FC<{ apiKey: string; children: React.ReactNode }
   return <>{children}</>;
 };
 
-export const Map: React.FC<any> = ({ children }) => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const Map: React.FC<any> = () => {
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f1f5f9' }}>
       <h3 style={{ fontSize: '1.125rem', fontWeight: 600, color: '#64748b' }}>Mock Map View</h3>

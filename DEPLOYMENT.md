@@ -198,3 +198,29 @@ Once everything above is set up, the deployment process is entirely automated!
    - It will securely copy the `docker-compose.yml` and `nginx/` directory to your VPS.
    - It will SSH into your VPS, pull the latest images, and restart the containers.
 5. Once the workflow is green, visit `https://journei.yourdomain.com` and your app will be live!
+
+---
+
+## Troubleshooting
+
+### "502 Bad Gateway" or "Connection Refused" after deployment
+
+When deploying using Docker Compose, you may sometimes encounter a "502 Bad Gateway" error from Nginx, or see "Connection Refused" in the Nginx logs indicating it cannot reach the `frontend` or `backend` containers.
+
+**Cause:**
+By default, Nginx resolves domain names (like `frontend` and `backend`) to IP addresses exactly once when the Nginx process starts, and then caches those IP addresses indefinitely. When GitHub Actions triggers a new deployment, Docker Compose pulls the updated frontend and backend images and recreates those specific containers. In Docker's internal network, recreated containers often receive *new* internal IP addresses. Because the `nginx-proxy` container's configuration didn't change, it is not recreated, and it continues trying to proxy traffic to the old, stale IP addresses of the destroyed containers.
+
+**Solution:**
+The project's `nginx/nginx.conf` handles this by using Docker's internal DNS resolver (`127.0.0.11`) and shifting the `proxy_pass` destinations into variables:
+
+```nginx
+resolver 127.0.0.11 valid=30s;
+
+# Example location
+location / {
+    set $frontend http://frontend:80;
+    proxy_pass $frontend;
+}
+```
+
+By using variables (`$frontend`), Nginx is forced to re-evaluate and dynamically resolve the hostname to an IP address at runtime, allowing it to seamlessly detect the new IP addresses of containers after a deployment. If you ever rewrite the Nginx configuration, ensure you maintain this dynamic resolution pattern.

@@ -40,6 +40,9 @@ jobs:
           file: ./frontend/Dockerfile
           push: true
           tags: ${{ env.FRONTEND_IMAGE_LOWER }}:latest
+          build-args: |
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+            VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
 
       - name: Build and push Backend Docker image
         uses: docker/build-push-action@v5

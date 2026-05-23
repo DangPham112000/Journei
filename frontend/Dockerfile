@@ -22,6 +22,12 @@ WORKDIR /app/frontend
 # Note: VITE_BASE_PATH is not strictly required if we use a subdomain,
 # but if we wanted sub-path routing, we'd use it here.
 # For subdomain routing, the default base '/' works perfectly.
+
+ARG VITE_GOOGLE_CLIENT_ID
+ARG VITE_GOOGLE_MAPS_API_KEY
+ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
+
 RUN yarn generate
 RUN yarn build
 

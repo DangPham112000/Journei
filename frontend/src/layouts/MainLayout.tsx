@@ -1,7 +1,7 @@
 import { Navigate, Outlet, Link as RouterLink } from 'react-router-dom';
 import { useMeQuery } from '../__generated__/graphql';
 import { Button } from '@/components/ui/button';
-import { Loader2, Menu, Map as MapIcon, Compass, CalendarRange, User } from 'lucide-react';
+import { Loader2, Menu, Map as MapIcon, User } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -10,20 +10,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { useState } from 'react';
-
-const NavLinks = ({ onClick }: { onClick: () => void }) => (
-  <>
-    <Button variant="ghost" render={<RouterLink to="/" />} className="w-full justify-start md:w-auto" onClick={onClick}>
-      <MapIcon className="mr-2 h-4 w-4" /> Dashboard
-    </Button>
-    <Button variant="ghost" render={<RouterLink to="/discover" />} className="w-full justify-start md:w-auto" onClick={onClick}>
-      <Compass className="mr-2 h-4 w-4" /> Discover
-    </Button>
-    <Button variant="ghost" render={<RouterLink to="/manage" />} className="w-full justify-start md:w-auto" onClick={onClick}>
-      <CalendarRange className="mr-2 h-4 w-4" /> Manage Events
-    </Button>
-  </>
-);
+import { NavLinks } from '../components/NavLinks';
 
 export default function MainLayout() {
   const { data, loading, error } = useMeQuery();

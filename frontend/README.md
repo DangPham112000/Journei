@@ -7,6 +7,15 @@ Currently, two official plugins are available:
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
+## Development Setup
+
+The frontend app interacts with the backend via GraphQL.
+
+### Backend Connection
+The application is configured to use a relative path (`/graphql`) for all API requests.
+- **In Local Development:** Vite's development server is configured to automatically proxy requests made to `/graphql` to the local backend running at `http://localhost:4000`. You do not need to set `VITE_GRAPHQL_URI` in an `.env` file. Just ensure the backend is running locally.
+- **In Production:** Nginx serves the frontend and proxies `/graphql` requests directly to the backend container.
+
 ## React Compiler
 
 The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).

@@ -15,6 +15,11 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    server: {
+      proxy: {
+        '/graphql': 'http://localhost:4000',
+      },
+    },
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),

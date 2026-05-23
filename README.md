@@ -94,9 +94,16 @@ By default, `yarn start` spins up the application in a sandboxed **Mock Mode**. 
 
 ### Production Deployment
 
-The production deployment is fully automated using a **GitHub Actions CI/CD** pipeline. It orchestrates building Docker images for both the frontend and backend, pushing them to GitHub Container Registry (GHCR), and deploying them to a VPS using **Docker Compose**. We also utilize **Cloudflare** for DNS and SSL termination to serve the application on a subdomain.
+The production deployment is fully automated using a **GitHub Actions CI/CD** pipeline. We utilize **Cloudflare** for DNS and SSL termination to serve the application on a subdomain.
 
-For a comprehensive, step-by-step guide on setting up the VPS, Docker, SSH keys, Cloudflare, and GitHub Secrets required for this automated workflow, please refer to the detailed [**DEPLOYMENT.md**](./DEPLOYMENT.md) documentation.
+Here is a high-level summary of the steps involved in the deployment process:
+1. **VPS Preparation:** Set up an Ubuntu VPS, install Docker and Docker Compose, and configure SSH keys.
+2. **Cloudflare Setup:** Configure domain DNS to point to the VPS using Cloudflare's proxy.
+3. **App Configuration:** Prepare the application directories and `.env` variables directly on the VPS.
+4. **GitHub Secrets:** Add necessary credentials (VPS IP, username, SSH key, and a GHCR Personal Access Token) as GitHub Secrets.
+5. **Automated Pipeline:** On push to the `main` branch, GitHub Actions builds the Docker images, pushes them to the GitHub Container Registry, and restarts the containers via SSH on the VPS.
+
+For a comprehensive, step-by-step guide on configuring each of these components, please refer to the detailed [**DEPLOYMENT.md**](./DEPLOYMENT.md) documentation.
 
 ### GraphQL Code Generation
 This project uses GraphQL Code Generator to automatically create TypeScript types and Apollo hooks from `.gql` files.

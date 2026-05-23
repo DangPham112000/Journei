@@ -13,7 +13,7 @@ import ManageEventsPage from './pages/events/ManageEventsPage';
 
 const client = new ApolloClient({
   link: new HttpLink({
-    uri: import.meta.env.VITE_GRAPHQL_URI || 'http://localhost:4000/graphql',
+    uri: '/graphql',
     // We can't easily configure credentials: 'include' using just HttpLink, so wait,
     // we should add fetchOptions to HttpLink
     fetchOptions: {

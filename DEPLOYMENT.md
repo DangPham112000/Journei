@@ -136,18 +136,6 @@ Before the first deployment, you need to prepare the application directory and e
    ```
 5. Save and exit (press `Esc`, type `:wq`, and press `Enter`).
 
-6. You also need to manually copy the `docker-compose.yml` and `nginx/nginx.conf` files to your VPS for the first run.
-   - Create `nginx/nginx.conf` matching the one in the repository:
-     - Run `vim nginx/nginx.conf`.
-     - Press `i` to enter insert mode.
-     - Paste the contents of the `nginx/nginx.conf` file from the repository.
-     - Press `Esc`, type `:wq`, and press `Enter` to save and exit.
-   - Create `docker-compose.yml` matching the one in the repository:
-     - Run `vim docker-compose.yml`.
-     - Press `i` to enter insert mode.
-     - Paste the contents of the `docker-compose.yml` file from the repository.
-     - Press `Esc`, type `:wq`, and press `Enter` to save and exit.
-
 ---
 
 ## 4. GitHub Repository Setup (Secrets)
@@ -205,5 +193,6 @@ Once everything above is set up, the deployment process is entirely automated!
 4. You will see the `Deploy to VPS` workflow running.
    - It will build the Frontend and Backend Docker images.
    - It will push those images to the GitHub Container Registry.
+   - It will securely copy the `docker-compose.yml` and `nginx/` directory to your VPS.
    - It will SSH into your VPS, pull the latest images, and restart the containers.
 5. Once the workflow is green, visit `https://journei.yourdomain.com` and your app will be live!

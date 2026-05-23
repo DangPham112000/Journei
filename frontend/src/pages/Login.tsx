@@ -9,6 +9,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [loginWithGoogle, { loading, error }] = useLoginWithGoogleMutation();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleLoginSuccess = async (codeResponse: any) => {
     try {
       await loginWithGoogle({

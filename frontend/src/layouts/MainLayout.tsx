@@ -11,6 +11,20 @@ import {
 } from "@/components/ui/sheet"
 import { useState } from 'react';
 
+const NavLinks = ({ onClick }: { onClick: () => void }) => (
+  <>
+    <Button variant="ghost" render={<RouterLink to="/" />} className="w-full justify-start md:w-auto" onClick={onClick}>
+      <MapIcon className="mr-2 h-4 w-4" /> Dashboard
+    </Button>
+    <Button variant="ghost" render={<RouterLink to="/discover" />} className="w-full justify-start md:w-auto" onClick={onClick}>
+      <Compass className="mr-2 h-4 w-4" /> Discover
+    </Button>
+    <Button variant="ghost" render={<RouterLink to="/manage" />} className="w-full justify-start md:w-auto" onClick={onClick}>
+      <CalendarRange className="mr-2 h-4 w-4" /> Manage Events
+    </Button>
+  </>
+);
+
 export default function MainLayout() {
   const { data, loading, error } = useMeQuery();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -27,20 +41,6 @@ export default function MainLayout() {
     return <Navigate to="/login" replace />;
   }
 
-  const NavLinks = () => (
-    <>
-      <Button variant="ghost" asChild className="w-full justify-start md:w-auto" onClick={() => setIsMobileMenuOpen(false)}>
-        <RouterLink to="/"><MapIcon className="mr-2 h-4 w-4" /> Dashboard</RouterLink>
-      </Button>
-      <Button variant="ghost" asChild className="w-full justify-start md:w-auto" onClick={() => setIsMobileMenuOpen(false)}>
-        <RouterLink to="/discover"><Compass className="mr-2 h-4 w-4" /> Discover</RouterLink>
-      </Button>
-      <Button variant="ghost" asChild className="w-full justify-start md:w-auto" onClick={() => setIsMobileMenuOpen(false)}>
-        <RouterLink to="/manage"><CalendarRange className="mr-2 h-4 w-4" /> Manage Events</RouterLink>
-      </Button>
-    </>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -51,7 +51,7 @@ export default function MainLayout() {
           </RouterLink>
 
           <div className="hidden md:flex items-center space-x-2">
-            <NavLinks />
+            <NavLinks onClick={() => setIsMobileMenuOpen(false)} />
             <div className="flex items-center gap-2 ml-4 pl-4 border-l">
               <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">{data.me.name}</span>
@@ -60,10 +60,10 @@ export default function MainLayout() {
 
           <div className="md:hidden flex items-center">
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+              <SheetTrigger render={
+                <Button variant="ghost" size="icon" />
+              }>
                   <Menu className="h-6 w-6" />
-                </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-[280px]">
                 <SheetHeader>
@@ -73,7 +73,7 @@ export default function MainLayout() {
                   </SheetTitle>
                 </SheetHeader>
                 <div className="flex flex-col gap-2 mt-6">
-                  <NavLinks />
+                  <NavLinks onClick={() => setIsMobileMenuOpen(false)} />
                   <div className="mt-4 pt-4 border-t flex items-center gap-2 px-4">
                     <User className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm font-medium">{data.me.name}</span>

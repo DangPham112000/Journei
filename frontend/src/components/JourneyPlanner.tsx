@@ -31,24 +31,23 @@ const JourneyPlanner: React.FC = () => {
         <div className="flex flex-col gap-1.5 flex-1">
           <label className="text-sm font-medium">Start Date</label>
           <Popover>
-            <PopoverTrigger asChild>
+            <PopoverTrigger render={
               <Button
                 variant={"outline"}
                 className={cn(
                   "w-full justify-start text-left font-normal",
                   !startDate && "text-muted-foreground"
                 )}
-              >
+              />
+            }>
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
-              </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={startDate}
                 onSelect={setStartDate}
-                initialFocus
               />
             </PopoverContent>
           </Popover>
@@ -57,24 +56,23 @@ const JourneyPlanner: React.FC = () => {
         <div className="flex flex-col gap-1.5 flex-1">
           <label className="text-sm font-medium">End Date</label>
           <Popover>
-            <PopoverTrigger asChild>
+            <PopoverTrigger render={
               <Button
                 variant={"outline"}
                 className={cn(
                   "w-full justify-start text-left font-normal",
                   !endDate && "text-muted-foreground"
                 )}
-              >
+              />
+            }>
                 <CalendarIcon className="mr-2 h-4 w-4" />
                 {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
-              </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
                 selected={endDate}
                 onSelect={setEndDate}
-                initialFocus
               />
             </PopoverContent>
           </Popover>

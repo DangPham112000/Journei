@@ -91,5 +91,9 @@ jobs:
             docker pull ghcr.io/$GITHUB_REPOSITORY_LOWER/journei-frontend:latest
             docker pull ghcr.io/$GITHUB_REPOSITORY_LOWER/journei-backend:latest
 
+            # Update Nginx config with DOMAIN
+            DOMAIN_VALUE=$(grep '^DOMAIN=' .env | cut -d '=' -f2)
+            sed -i "s/server_name _;/server_name ${DOMAIN_VALUE};/g" nginx/nginx.conf
+
             # Restart the services
             docker compose up -d

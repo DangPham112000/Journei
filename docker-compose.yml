@@ -37,7 +37,7 @@ services:
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - JWT_SECRET=${JWT_SECRET}
       - NODE_ENV=production
-      - FRONTEND_URL=http://${DOMAIN} # or https://${DOMAIN} if using SSL
+      - FRONTEND_URL=https://${DOMAIN}
     depends_on:
       - mongodb
 

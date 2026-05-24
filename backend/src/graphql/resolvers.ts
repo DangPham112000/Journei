@@ -8,7 +8,7 @@ dotenv.config();
 const oAuth2Client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  'postmessage' // required for flow: 'auth-code' in react-oauth/google
+  'postmessage', // required for flow: 'auth-code' in react-oauth/google
 );
 
 export const resolvers = {
@@ -21,24 +21,40 @@ export const resolvers = {
       return await User.findById(context.user.id);
     },
     events: async () => {
-      return await Event.find().populate('creator').populate('followers').populate('participants').sort({ startDate: 1 });
+      return await Event.find()
+        .populate('creator')
+        .populate('followers')
+        .populate('participants')
+        .sort({ startDate: 1 });
     },
     myEvents: async (_: any, __: any, context: any) => {
       if (!context.user) throw new Error('Not authenticated');
-      return await Event.find({ creator: context.user.id }).populate('creator').populate('followers').populate('participants').sort({ startDate: 1 });
+      return await Event.find({ creator: context.user.id })
+        .populate('creator')
+        .populate('followers')
+        .populate('participants')
+        .sort({ startDate: 1 });
     },
     joinedEvents: async (_: any, __: any, context: any) => {
       if (!context.user) throw new Error('Not authenticated');
-      return await Event.find({ participants: context.user.id }).populate('creator').populate('followers').populate('participants').sort({ startDate: 1 });
+      return await Event.find({ participants: context.user.id })
+        .populate('creator')
+        .populate('followers')
+        .populate('participants')
+        .sort({ startDate: 1 });
     },
     followedEvents: async (_: any, __: any, context: any) => {
       if (!context.user) throw new Error('Not authenticated');
       // Events where the user is in followers but NOT in participants
       return await Event.find({
         followers: context.user.id,
-        participants: { $ne: context.user.id }
-      }).populate('creator').populate('followers').populate('participants').sort({ startDate: 1 });
-    }
+        participants: { $ne: context.user.id },
+      })
+        .populate('creator')
+        .populate('followers')
+        .populate('participants')
+        .sort({ startDate: 1 });
+    },
   },
   Mutation: {
     loginWithGoogle: async (_: any, { code }: { code: string }, context: any) => {
@@ -121,13 +137,17 @@ export const resolvers = {
       };
 
       const newEvent = await Event.create(eventArgs);
-      return await Event.findById(newEvent._id).populate('creator').populate('followers').populate('participants');
+      return await Event.findById(newEvent._id)
+        .populate('creator')
+        .populate('followers')
+        .populate('participants');
     },
     updateEvent: async (_: any, args: any, context: any) => {
       if (!context.user) throw new Error('Not authenticated');
       const event = await Event.findById(args.id);
       if (!event) throw new Error('Event not found');
-      if (event.creator.toString() !== context.user.id) throw new Error('Not authorized to update this event');
+      if (event.creator.toString() !== context.user.id)
+        throw new Error('Not authorized to update this event');
 
       if (args.title) event.title = args.title;
       if (args.description !== undefined) event.description = args.description;
@@ -136,69 +156,83 @@ export const resolvers = {
       if (args.location !== undefined) event.location = args.location;
 
       await event.save();
-      return await Event.findById(event._id).populate('creator').populate('followers').populate('participants');
+      return await Event.findById(event._id)
+        .populate('creator')
+        .populate('followers')
+        .populate('participants');
     },
     deleteEvent: async (_: any, { id }: { id: string }, context: any) => {
       if (!context.user) throw new Error('Not authenticated');
       const event = await Event.findById(id);
       if (!event) throw new Error('Event not found');
-      if (event.creator.toString() !== context.user.id) throw new Error('Not authorized to delete this event');
+      if (event.creator.toString() !== context.user.id)
+        throw new Error('Not authorized to delete this event');
 
       await Event.findByIdAndDelete(id);
       return true;
     },
     joinEvent: async (_: any, { id }: { id: string }, context: any) => {
       if (!context.user) throw new Error('Not authenticated');
-      const event = await Event.findById(id);
+
+      const event = await Event.findByIdAndUpdate(id, {
+        $addToSet: {
+          participants: context.user.id,
+          followers: context.user.id,
+        },
+      });
+
       if (!event) throw new Error('Event not found');
 
-      if (!event.participants.includes(context.user.id)) {
-        event.participants.push(context.user.id);
-      }
-      if (!event.followers.includes(context.user.id)) {
-        event.followers.push(context.user.id);
-      }
-
-      await event.save();
-      return await Event.findById(id).populate('creator').populate('followers').populate('participants');
+      return await Event.findById(id)
+        .populate('creator')
+        .populate('followers')
+        .populate('participants');
     },
     leaveEvent: async (_: any, { id }: { id: string }, context: any) => {
       if (!context.user) throw new Error('Not authenticated');
 
-      const event = await Event.findByIdAndUpdate(
-        id,
-        {
-          $pull: { participants: context.user.id },
-          $addToSet: { followers: context.user.id }
-        }
-      );
+      const event = await Event.findByIdAndUpdate(id, {
+        $pull: { participants: context.user.id },
+        $addToSet: { followers: context.user.id },
+      });
 
       if (!event) throw new Error('Event not found');
 
-      return await Event.findById(id).populate('creator').populate('followers').populate('participants');
+      return await Event.findById(id)
+        .populate('creator')
+        .populate('followers')
+        .populate('participants');
     },
     followEvent: async (_: any, { id }: { id: string }, context: any) => {
       if (!context.user) throw new Error('Not authenticated');
-      const event = await Event.findById(id);
+
+      const event = await Event.findByIdAndUpdate(id, {
+        $addToSet: { followers: context.user.id },
+      });
+
       if (!event) throw new Error('Event not found');
 
-      if (!event.followers.includes(context.user.id)) {
-        event.followers.push(context.user.id);
-      }
-
-      await event.save();
-      return await Event.findById(id).populate('creator').populate('followers').populate('participants');
+      return await Event.findById(id)
+        .populate('creator')
+        .populate('followers')
+        .populate('participants');
     },
     unfollowEvent: async (_: any, { id }: { id: string }, context: any) => {
       if (!context.user) throw new Error('Not authenticated');
-      const event = await Event.findById(id);
+
+      const event = await Event.findByIdAndUpdate(id, {
+        $pull: {
+          followers: context.user.id,
+          participants: context.user.id,
+        },
+      });
+
       if (!event) throw new Error('Event not found');
 
-      event.followers = event.followers.filter(f => f.toString() !== context.user.id) as any;
-      event.participants = event.participants.filter(p => p.toString() !== context.user.id) as any;
-
-      await event.save();
-      return await Event.findById(id).populate('creator').populate('followers').populate('participants');
-    }
+      return await Event.findById(id)
+        .populate('creator')
+        .populate('followers')
+        .populate('participants');
+    },
   },
 };

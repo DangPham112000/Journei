@@ -164,16 +164,17 @@ export const resolvers = {
     },
     leaveEvent: async (_: any, { id }: { id: string }, context: any) => {
       if (!context.user) throw new Error('Not authenticated');
-      const event = await Event.findById(id);
+
+      const event = await Event.findByIdAndUpdate(
+        id,
+        {
+          $pull: { participants: context.user.id },
+          $addToSet: { followers: context.user.id }
+        }
+      );
+
       if (!event) throw new Error('Event not found');
 
-      event.participants = event.participants.filter(p => p.toString() !== context.user.id) as any;
-      // Keep in followers as per requirement: leaving moves back to followed section
-      if (!event.followers.some(f => f.toString() === context.user.id)) {
-          event.followers.push(context.user.id as any);
-      }
-
-      await event.save();
       return await Event.findById(id).populate('creator').populate('followers').populate('participants');
     },
     followEvent: async (_: any, { id }: { id: string }, context: any) => {

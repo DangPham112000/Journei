@@ -2,7 +2,7 @@
 
 # Setup script for the Journey Planner app
 # This script installs dependencies, generates GraphQL types, and builds both backend and frontend.
-# It is intended to be used as a setup script for faster startups in new sessions.
+# It is intended to be used by Jules as a setup script for faster startups in new sessions.
 
 echo "Installing dependencies..."
 yarn install

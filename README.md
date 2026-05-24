@@ -23,6 +23,43 @@ A web application to plan your journeys. This app allows you to choose dates for
 - Google Auth Library
 - JWT & Cookie Parser
 
+## Architecture
+
+```mermaid
+flowchart TD
+    %% Styles
+    classDef network fill:#f0f8ff,stroke:#0000ff,stroke-dasharray: 5 5;
+
+    User((User))
+
+    subgraph External Network
+        Cloudflare(Cloudflare DNS/SSL)
+        GoogleAPIs((Google APIs))
+    end
+
+    subgraph Ubuntu VPS Host
+        subgraph Docker Internal Network
+            NginxProxy[Nginx Proxy Container]
+            Frontend[Frontend Container<br>React]
+            Backend[Backend Container<br>Node.js/GraphQL]
+            Mongo[(MongoDB Container)]
+            MongoVol[[Docker Volume: mongodb_data]]
+        end
+    end
+
+    User <-->|HTTPS| Cloudflare
+    Cloudflare <-->|Traffic| NginxProxy
+
+    NginxProxy -->|Root Requests /| Frontend
+    NginxProxy -->|API Requests /graphql| Backend
+
+    Backend <-->|Mongoose| Mongo
+    Mongo --- MongoVol
+
+    Frontend -.->|Client-side Map Data| GoogleAPIs
+    Backend -.->|Server-side OAuth/Calendar| GoogleAPIs
+```
+
 ## Project Structure
 
 - `/frontend` - Contains the React application.
@@ -102,6 +139,49 @@ Here is a high-level summary of the steps involved in the deployment process:
 3. **App Configuration:** Prepare the application directories and `.env` variables directly on the VPS.
 4. **GitHub Secrets:** Add necessary credentials (VPS IP, username, SSH key, and a GHCR Personal Access Token) as GitHub Secrets.
 5. **Automated Pipeline:** On push to the `main` branch, GitHub Actions builds the Docker images, pushes them to the GitHub Container Registry, and restarts the containers via SSH on the VPS.
+
+#### Deployment Flow
+
+```mermaid
+sequenceDiagram
+    participant Dev as Developer
+    participant GH as GitHub Repository
+    participant Actions as GitHub Actions
+    participant GHCR as GitHub Container Registry
+    participant VPS as Ubuntu VPS Host
+    participant Docker as Docker Engine
+
+    Dev->>GH: 1. Push code to `main` branch
+    activate GH
+    GH->>Actions: 2. Trigger `deploy.yml` workflow
+    deactivate GH
+    activate Actions
+
+    Actions->>Actions: 3. Build Frontend & Backend Images
+    Actions->>GHCR: 4. Push new Docker Images
+    activate GHCR
+    GHCR-->>Actions: Acknowledge Push
+    deactivate GHCR
+
+    Actions->>VPS: 5. Copy config files via SCP (docker-compose & nginx)
+    Actions->>VPS: 6. SSH connect to execute commands
+    activate VPS
+
+    VPS->>GHCR: 7. `docker compose pull`
+    activate GHCR
+    GHCR-->>VPS: Download new images
+    deactivate GHCR
+
+    VPS->>Docker: 8. Force recreate nginx-proxy
+    VPS->>Docker: 9. `docker compose up -d` (Restart all updated containers)
+    Docker-->>VPS: Containers started successfully
+
+    VPS-->>Actions: SSH commands complete
+    deactivate VPS
+
+    Actions-->>Dev: Deployment Successful
+    deactivate Actions
+```
 
 For a comprehensive, step-by-step guide on configuring each of these components, please refer to the detailed [**DEPLOYMENT.md**](./DEPLOYMENT.md) documentation.
 

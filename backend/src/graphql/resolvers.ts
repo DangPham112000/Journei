@@ -82,7 +82,11 @@ export const resolvers = {
           email: user.email,
         };
 
-        const token = jwt.sign(jwtPayload, process.env.JWT_SECRET || 'your_jwt_secret', {
+        if (!process.env.JWT_SECRET) {
+          throw new Error('JWT_SECRET environment variable is not set');
+        }
+
+        const token = jwt.sign(jwtPayload, process.env.JWT_SECRET, {
           expiresIn: '7d',
         });
 

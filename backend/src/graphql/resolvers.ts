@@ -12,6 +12,11 @@ const oAuth2Client = new OAuth2Client(
   'postmessage', // required for flow: 'auth-code' in react-oauth/google
 );
 
+const requireAuth = (resolver: any) => async (parent: any, args: any, context: any, info: any) => {
+  if (!context.user) throw new Error('Not authenticated');
+  return resolver(parent, args, context, info);
+};
+
 export const resolvers = {
   Query: {
     hello: () => 'Hello from GraphQL!',
@@ -21,32 +26,28 @@ export const resolvers = {
       }
       return await User.findById(context.user.id);
     },
-    events: async (_: any, __: any, context: any) => {
-      if (!context.user) throw new Error('Not authenticated');
+    events: requireAuth(async () => {
       return await Event.find()
         .populate('creator')
         .populate('followers')
         .populate('participants')
         .sort({ startDate: 1 });
-    },
-    myEvents: async (_: any, __: any, context: any) => {
-      if (!context.user) throw new Error('Not authenticated');
+    }),
+    myEvents: requireAuth(async (_: any, __: any, context: any) => {
       return await Event.find({ creator: context.user.id })
         .populate('creator')
         .populate('followers')
         .populate('participants')
         .sort({ startDate: 1 });
-    },
-    joinedEvents: async (_: any, __: any, context: any) => {
-      if (!context.user) throw new Error('Not authenticated');
+    }),
+    joinedEvents: requireAuth(async (_: any, __: any, context: any) => {
       return await Event.find({ participants: context.user.id })
         .populate('creator')
         .populate('followers')
         .populate('participants')
         .sort({ startDate: 1 });
-    },
-    followedEvents: async (_: any, __: any, context: any) => {
-      if (!context.user) throw new Error('Not authenticated');
+    }),
+    followedEvents: requireAuth(async (_: any, __: any, context: any) => {
       // Events where the user is in followers but NOT in participants
       return await Event.find({
         followers: context.user.id,
@@ -56,7 +57,7 @@ export const resolvers = {
         .populate('followers')
         .populate('participants')
         .sort({ startDate: 1 });
-    },
+    }),
   },
   Mutation: {
     loginWithGoogle: async (_: any, { code }: { code: string }, context: any) => {
@@ -124,9 +125,7 @@ export const resolvers = {
         throw new Error('Failed to login with Google');
       }
     },
-    createEvent: async (_: any, args: any, context: any) => {
-      if (!context.user) throw new Error('Not authenticated');
-
+    createEvent: requireAuth(async (_: any, args: any, context: any) => {
       const eventArgs = {
         title: args.title,
         description: args.description,
@@ -143,9 +142,8 @@ export const resolvers = {
         .populate('creator')
         .populate('followers')
         .populate('participants');
-    },
-    updateEvent: async (_: any, args: any, context: any) => {
-      if (!context.user) throw new Error('Not authenticated');
+    }),
+    updateEvent: requireAuth(async (_: any, args: any, context: any) => {
       const event = await Event.findById(args.id);
       if (!event) throw new Error('Event not found');
       if (event.creator.toString() !== context.user.id)
@@ -162,9 +160,8 @@ export const resolvers = {
         .populate('creator')
         .populate('followers')
         .populate('participants');
-    },
-    deleteEvent: async (_: any, { id }: { id: string }, context: any) => {
-      if (!context.user) throw new Error('Not authenticated');
+    }),
+    deleteEvent: requireAuth(async (_: any, { id }: { id: string }, context: any) => {
       const event = await Event.findById(id);
       if (!event) throw new Error('Event not found');
       if (event.creator.toString() !== context.user.id)
@@ -172,10 +169,8 @@ export const resolvers = {
 
       await Event.findByIdAndDelete(id);
       return true;
-    },
-    joinEvent: async (_: any, { id }: { id: string }, context: any) => {
-      if (!context.user) throw new Error('Not authenticated');
-
+    }),
+    joinEvent: requireAuth(async (_: any, { id }: { id: string }, context: any) => {
       const event = await Event.findByIdAndUpdate(id, {
         $addToSet: {
           participants: context.user.id,
@@ -189,10 +184,8 @@ export const resolvers = {
         .populate('creator')
         .populate('followers')
         .populate('participants');
-    },
-    leaveEvent: async (_: any, { id }: { id: string }, context: any) => {
-      if (!context.user) throw new Error('Not authenticated');
-
+    }),
+    leaveEvent: requireAuth(async (_: any, { id }: { id: string }, context: any) => {
       const event = await Event.findByIdAndUpdate(id, {
         $pull: { participants: context.user.id },
         $addToSet: { followers: context.user.id },
@@ -204,10 +197,8 @@ export const resolvers = {
         .populate('creator')
         .populate('followers')
         .populate('participants');
-    },
-    followEvent: async (_: any, { id }: { id: string }, context: any) => {
-      if (!context.user) throw new Error('Not authenticated');
-
+    }),
+    followEvent: requireAuth(async (_: any, { id }: { id: string }, context: any) => {
       const event = await Event.findByIdAndUpdate(id, {
         $addToSet: { followers: context.user.id },
       });
@@ -218,10 +209,8 @@ export const resolvers = {
         .populate('creator')
         .populate('followers')
         .populate('participants');
-    },
-    unfollowEvent: async (_: any, { id }: { id: string }, context: any) => {
-      if (!context.user) throw new Error('Not authenticated');
-
+    }),
+    unfollowEvent: requireAuth(async (_: any, { id }: { id: string }, context: any) => {
       const event = await Event.findByIdAndUpdate(id, {
         $pull: {
           followers: context.user.id,
@@ -235,16 +224,14 @@ export const resolvers = {
         .populate('creator')
         .populate('followers')
         .populate('participants');
-    },
-    askAssistant: async (_: any, { message, history }: { message: string, history?: any[] }, context: any) => {
-      if (!context.user) throw new Error('Not authenticated');
-
+    }),
+    askAssistant: requireAuth(async (_: any, { message, history }: { message: string, history?: any[] }, context: any) => {
       try {
         const response = await processAssistantMessage(context.user.id, message, history);
         return response;
       } catch (error: any) {
         throw new Error(error.message || 'Failed to process assistant message');
       }
-    }
+    })
   },
 };

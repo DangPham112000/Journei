@@ -16,6 +16,21 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type AssistantResponse = {
+  __typename?: 'AssistantResponse';
+  draftEvent?: Maybe<DraftEvent>;
+  text: Scalars['String']['output'];
+};
+
+export type DraftEvent = {
+  __typename?: 'DraftEvent';
+  description?: Maybe<Scalars['String']['output']>;
+  endDate: Scalars['String']['output'];
+  location?: Maybe<Scalars['String']['output']>;
+  startDate: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
 export type Event = {
   __typename?: 'Event';
   creator: User;
@@ -29,8 +44,18 @@ export type Event = {
   title: Scalars['String']['output'];
 };
 
+export type MessageInput = {
+  parts: Array<MessagePartInput>;
+  role: Scalars['String']['input'];
+};
+
+export type MessagePartInput = {
+  text: Scalars['String']['input'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
+  askAssistant: AssistantResponse;
   createEvent: Event;
   deleteEvent: Scalars['Boolean']['output'];
   followEvent: Event;
@@ -39,6 +64,12 @@ export type Mutation = {
   loginWithGoogle: User;
   unfollowEvent: Event;
   updateEvent: Event;
+};
+
+
+export type MutationAskAssistantArgs = {
+  history?: InputMaybe<Array<MessageInput>>;
+  message: Scalars['String']['input'];
 };
 
 

@@ -2,6 +2,7 @@ import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
 import { Event } from '../models/Event';
+import { processAssistantMessage } from '../utils/ai';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -234,5 +235,15 @@ export const resolvers = {
         .populate('followers')
         .populate('participants');
     },
+    askAssistant: async (_: any, { message, history }: { message: string, history?: any[] }, context: any) => {
+      if (!context.user) throw new Error('Not authenticated');
+
+      try {
+        const response = await processAssistantMessage(context.user.id, message, history);
+        return response;
+      } catch (error: any) {
+        throw new Error(error.message || 'Failed to process assistant message');
+      }
+    }
   },
 };

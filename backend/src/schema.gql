@@ -18,6 +18,19 @@ type Event {
   participants: [User!]!
 }
 
+type DraftEvent {
+  title: String!
+  description: String
+  startDate: String!
+  endDate: String!
+  location: String
+}
+
+type AssistantResponse {
+  text: String!
+  draftEvent: DraftEvent
+}
+
 type Query {
   hello: String!
   me: User
@@ -54,4 +67,15 @@ type Mutation {
   leaveEvent(id: ID!): Event!
   followEvent(id: ID!): Event!
   unfollowEvent(id: ID!): Event!
+
+  askAssistant(message: String!, history: [MessageInput!]): AssistantResponse!
+}
+
+input MessageInput {
+  role: String!
+  parts: [MessagePartInput!]!
+}
+
+input MessagePartInput {
+  text: String!
 }

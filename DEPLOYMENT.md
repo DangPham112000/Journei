@@ -129,6 +129,9 @@ Before the first deployment, you need to prepare the application directory and e
    GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
    JWT_SECRET=a_super_secure_random_string_here
    DOMAIN=journei.yourdomain.com
+
+   # AI Assistant Variables
+   GEMINI_API_KEY=your_gemini_api_key
    ```
 5. Save and exit (press `Esc`, type `:wq`, and press `Enter`).
 
@@ -179,6 +182,17 @@ Add the following secrets:
   - **Secret:** Paste your Google Maps API Key here. This is required to build the frontend application correctly.
 
 *Note: Since `VITE_GOOGLE_CLIENT_ID` and `VITE_GOOGLE_MAPS_API_KEY` are built directly into the frontend image using GitHub Secrets, you no longer need them in the `.env` file on your VPS.*
+
+### 4.3 Configure AI Assistant (Gemini API Key)
+
+To use the AI Assistant feature, you need a Google Gemini API Key:
+
+1. Go to [Google AI Studio](https://aistudio.google.com/).
+2. Sign in with your Google account.
+3. Click on **Get API key** in the left sidebar and create a new key.
+   * *Note: A free tier key is sufficient for development and testing. However, if you have a Google Workspace or Google One AI Premium subscription (or use Google Cloud vertex AI), using a paid tier key is highly recommended for production to avoid rate limits and to ensure your users' prompts are not logged by Google for training purposes.*
+4. SSH into your VPS and add this key to your `.env` file as `GEMINI_API_KEY=your_key_here`.
+5. Restart your backend container to apply the new environment variable: `docker compose up -d backend` (or let the GitHub Actions workflow do it on the next deployment).
 
 ---
 

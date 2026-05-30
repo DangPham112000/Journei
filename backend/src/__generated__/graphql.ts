@@ -11,6 +11,21 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type AssistantResponse = {
+  __typename?: 'AssistantResponse';
+  draftEvent?: Maybe<DraftEvent>;
+  text: Scalars['String']['output'];
+};
+
+export type DraftEvent = {
+  __typename?: 'DraftEvent';
+  description?: Maybe<Scalars['String']['output']>;
+  endDate: Scalars['String']['output'];
+  location?: Maybe<Scalars['String']['output']>;
+  startDate: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
 export type Event = {
   __typename?: 'Event';
   creator: User;
@@ -24,8 +39,18 @@ export type Event = {
   title: Scalars['String']['output'];
 };
 
+export type MessageInput = {
+  parts: Array<MessagePartInput>;
+  role: Scalars['String']['input'];
+};
+
+export type MessagePartInput = {
+  text: Scalars['String']['input'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
+  askAssistant: AssistantResponse;
   createEvent: Event;
   deleteEvent: Scalars['Boolean']['output'];
   followEvent: Event;
@@ -34,6 +59,12 @@ export type Mutation = {
   loginWithGoogle: User;
   unfollowEvent: Event;
   updateEvent: Event;
+};
+
+
+export type MutationAskAssistantArgs = {
+  history?: InputMaybe<Array<MessageInput>>;
+  message: Scalars['String']['input'];
 };
 
 
@@ -178,9 +209,13 @@ export type DirectiveResolverFn<TResult = Record<PropertyKey, never>, TParent = 
 
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
+  AssistantResponse: ResolverTypeWrapper<AssistantResponse>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  DraftEvent: ResolverTypeWrapper<DraftEvent>;
   Event: ResolverTypeWrapper<Event>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
+  MessageInput: MessageInput;
+  MessagePartInput: MessagePartInput;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
@@ -189,13 +224,30 @@ export type ResolversTypes = {
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
+  AssistantResponse: AssistantResponse;
   Boolean: Scalars['Boolean']['output'];
+  DraftEvent: DraftEvent;
   Event: Event;
   ID: Scalars['ID']['output'];
+  MessageInput: MessageInput;
+  MessagePartInput: MessagePartInput;
   Mutation: Record<PropertyKey, never>;
   Query: Record<PropertyKey, never>;
   String: Scalars['String']['output'];
   User: User;
+};
+
+export type AssistantResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['AssistantResponse'] = ResolversParentTypes['AssistantResponse']> = {
+  draftEvent?: Resolver<Maybe<ResolversTypes['DraftEvent']>, ParentType, ContextType>;
+  text?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type DraftEventResolvers<ContextType = any, ParentType extends ResolversParentTypes['DraftEvent'] = ResolversParentTypes['DraftEvent']> = {
+  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  endDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  location?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  startDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
 export type EventResolvers<ContextType = any, ParentType extends ResolversParentTypes['Event'] = ResolversParentTypes['Event']> = {
@@ -211,6 +263,7 @@ export type EventResolvers<ContextType = any, ParentType extends ResolversParent
 };
 
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  askAssistant?: Resolver<ResolversTypes['AssistantResponse'], ParentType, ContextType, RequireFields<MutationAskAssistantArgs, 'message'>>;
   createEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationCreateEventArgs, 'endDate' | 'startDate' | 'title'>>;
   deleteEvent?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteEventArgs, 'id'>>;
   followEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationFollowEventArgs, 'id'>>;
@@ -239,6 +292,8 @@ export type UserResolvers<ContextType = any, ParentType extends ResolversParentT
 };
 
 export type Resolvers<ContextType = any> = {
+  AssistantResponse?: AssistantResponseResolvers<ContextType>;
+  DraftEvent?: DraftEventResolvers<ContextType>;
   Event?: EventResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;

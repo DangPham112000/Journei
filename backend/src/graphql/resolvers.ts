@@ -21,7 +21,8 @@ export const resolvers = {
       }
       return await User.findById(context.user.id);
     },
-    events: async () => {
+    events: async (_: any, __: any, context: any) => {
+      if (!context.user) throw new Error('Not authenticated');
       return await Event.find()
         .populate('creator')
         .populate('followers')

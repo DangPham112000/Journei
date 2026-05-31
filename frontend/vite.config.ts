@@ -31,10 +31,22 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-                return 'react-vendor';
+              if (id.includes('react-dom')) {
+                return 'react-dom-vendor';
               }
-              if (id.includes('@apollo') || id.includes('graphql')) {
+              if (id.includes('react-router')) {
+                return 'react-router-vendor';
+              }
+              if (id.includes('react')) {
+                return 'react-core-vendor';
+              }
+              if (id.includes('@apollo/client')) {
+                return 'apollo-client-vendor';
+              }
+              if (id.includes('graphql')) {
+                return 'graphql-vendor';
+              }
+              if (id.includes('@apollo')) {
                 return 'apollo-vendor';
               }
               if (id.includes('@vis.gl') || id.includes('@react-oauth')) {

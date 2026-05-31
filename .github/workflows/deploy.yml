@@ -4,6 +4,26 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      deploy_type:
+        description: 'Deploy using Branch or Commit'
+        required: true
+        type: choice
+        options:
+          - branch
+          - commit
+        default: 'branch'
+      branch_name:
+        description: 'Branch name (if empty, defaults to main)'
+        required: false
+        type: string
+        default: ''
+      commit_hash:
+        description: 'Commit hash (if empty, defaults to main)'
+        required: false
+        type: string
+        default: ''
 
 env:
   REGISTRY: ghcr.io
@@ -16,10 +36,38 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      target_ref: ${{ steps.determine-ref.outputs.target_ref }}
 
     steps:
+      - name: Determine Target Reference
+        id: determine-ref
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          INPUT_DEPLOY_TYPE: ${{ inputs.deploy_type }}
+          INPUT_BRANCH_NAME: ${{ inputs.branch_name }}
+          INPUT_COMMIT_HASH: ${{ inputs.commit_hash }}
+        run: |
+          TARGET_REF="$GITHUB_SHA"
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            TARGET_REF="main"
+            if [[ "$INPUT_DEPLOY_TYPE" == "branch" ]]; then
+              if [[ -n "$INPUT_BRANCH_NAME" ]]; then
+                TARGET_REF="$INPUT_BRANCH_NAME"
+              fi
+            elif [[ "$INPUT_DEPLOY_TYPE" == "commit" ]]; then
+              if [[ -n "$INPUT_COMMIT_HASH" ]]; then
+                TARGET_REF="$INPUT_COMMIT_HASH"
+              fi
+            fi
+          fi
+          echo "target_ref=$TARGET_REF" >> $GITHUB_OUTPUT
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.determine-ref.outputs.target_ref }}
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -58,6 +106,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.build-and-push.outputs.target_ref }}
 
       - name: Lowercase Repository Name
         run: |

@@ -26,5 +26,31 @@ export default defineConfig(({ mode }) => {
         ...mockAliases,
       },
     },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+                return 'react-vendor';
+              }
+              if (id.includes('@apollo') || id.includes('graphql')) {
+                return 'apollo-vendor';
+              }
+              if (id.includes('@vis.gl') || id.includes('@react-oauth')) {
+                return 'google-vendor';
+              }
+              if (id.includes('shadcn') || id.includes('@base-ui') || id.includes('lucide-react') || id.includes('tailwind') || id.includes('clsx')) {
+                return 'ui-vendor';
+              }
+              if (id.includes('date-fns') || id.includes('dayjs') || id.includes('react-day-picker')) {
+                return 'date-vendor';
+              }
+              return 'vendor';
+            }
+          }
+        }
+      }
+    }
   };
 })

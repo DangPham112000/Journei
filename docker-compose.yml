@@ -42,7 +42,7 @@ services:
       - mongodb
 
   mongodb:
-    image: mongo:latest
+    image: mongo:4.4
     container_name: journei-mongodb
     deploy:
       restart_policy:

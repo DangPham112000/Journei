@@ -1,0 +1,46 @@
+name: Clear MongoDB Data
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type YES to confirm you want to permanently delete all MongoDB data'
+        required: true
+        type: string
+
+jobs:
+  clear-mongodb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify Confirmation
+        run: |
+          if [ "${{ inputs.confirm }}" != "YES" ]; then
+            echo "Confirmation failed. You must type 'YES' to proceed."
+            exit 1
+          fi
+
+      - name: Clear MongoDB Volume on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            echo "Navigating to project directory..."
+            cd ~/journei || exit 1
+
+            echo "Stopping MongoDB container..."
+            docker compose stop mongodb
+
+            echo "Removing MongoDB container (to release volume)..."
+            docker compose rm -f mongodb
+
+            echo "Removing MongoDB volume..."
+            # The volume name is usually prefixed with the project directory name.
+            # Assuming the directory is 'journei', the volume is 'journei_mongodb_data'
+            docker volume rm journei_mongodb_data || echo "Volume might already be deleted or not found."
+
+            echo "Starting MongoDB container fresh..."
+            docker compose up -d mongodb
+
+            echo "MongoDB data has been cleared successfully."

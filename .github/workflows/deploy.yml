@@ -137,6 +137,9 @@ jobs:
             # Login to GHCR (using a Personal Access Token stored as a secret, NOT GITHUB_TOKEN which is temporary)
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+            # Clean up dangling images before pulling new ones to free up space
+            docker image prune -f
+
             # Pull the latest images
             docker pull ghcr.io/$GITHUB_REPOSITORY_LOWER/journei-frontend:latest
             docker pull ghcr.io/$GITHUB_REPOSITORY_LOWER/journei-backend:latest
@@ -152,3 +155,6 @@ jobs:
             # Force recreating nginx-proxy to pick up the new configuration file inode
             # and to freshly resolve the new DNS IPs of the upstream containers
             docker compose up -d --force-recreate nginx-proxy
+
+            # Clean up old unused images to prevent running out of disk space in future deployments
+            docker image prune -a -f

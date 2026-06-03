@@ -66,7 +66,7 @@ async function startServer() {
           }
           user = jwt.verify(token, process.env.JWT_SECRET);
         } catch (error) {
-          logger.warn({ err: error }, 'Invalid token');
+          logger.error({ err: error }, 'Invalid token');
         }
       }
       return { user, req, res };

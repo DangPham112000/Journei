@@ -31,6 +31,11 @@ services:
       restart_policy:
         condition: on-failure
         max_attempts: 7
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "3"
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/journey-planner
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}

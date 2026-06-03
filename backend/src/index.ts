@@ -8,7 +8,10 @@ import cookieParser from 'cookie-parser';
 import jwt from 'jsonwebtoken';
 import { readFileSync } from 'fs';
 import path from 'path';
+import pinoHttp from 'pino-http';
 import { resolvers } from './graphql/resolvers';
+import { logger } from './utils/logger';
+import { graphqlLoggerPlugin } from './utils/graphqlLogger';
 
 const typeDefs = readFileSync(path.join(__dirname, 'schema.gql'), 'utf8');
 
@@ -18,6 +21,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 
 // Middleware
+app.use(pinoHttp({ logger }));
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Update with frontend URL if different
   credentials: true,
@@ -35,15 +39,16 @@ async function startServer() {
   try {
     const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/journey-planner';
     await mongoose.connect(mongoUri);
-    console.log('Connected to MongoDB');
+    logger.info('Connected to MongoDB');
   } catch (error) {
-    console.error('Error connecting to MongoDB:', error);
+    logger.error({ err: error }, 'Error connecting to MongoDB');
   }
 
   // Initialize Apollo Server
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    plugins: [graphqlLoggerPlugin],
   });
 
   await server.start();
@@ -61,7 +66,7 @@ async function startServer() {
           }
           user = jwt.verify(token, process.env.JWT_SECRET);
         } catch (error) {
-          console.error('Invalid token:', error);
+          logger.warn({ err: error }, 'Invalid token');
         }
       }
       return { user, req, res };
@@ -69,11 +74,12 @@ async function startServer() {
   }));
 
   app.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
-    console.log(`GraphQL endpoint at http://localhost:${PORT}/graphql`);
+    logger.info(`Server is running at http://localhost:${PORT}`);
+    logger.info(`GraphQL endpoint at http://localhost:${PORT}/graphql`);
   });
 }
 
 startServer().catch((error) => {
-  console.error('Failed to start server:', error);
+  logger.fatal({ err: error }, 'Failed to start server');
+  process.exit(1);
 });

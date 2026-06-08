@@ -7,15 +7,12 @@ import { ApolloClient, InMemoryCache, ApolloProvider, HttpLink } from '@apollo/c
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
-import LandingPage from './pages/events/LandingPage';
-import DiscoverPage from './pages/events/DiscoverPage';
-import ManageEventsPage from './pages/events/ManageEventsPage';
+import ManagePlansPage from './pages/plans/ManagePlansPage';
+import PlanDetailsPage from './pages/plans/PlanDetailsPage';
 
 const client = new ApolloClient({
   link: new HttpLink({
     uri: '/graphql',
-    // We can't easily configure credentials: 'include' using just HttpLink, so wait,
-    // we should add fetchOptions to HttpLink
     fetchOptions: {
       credentials: 'include',
     },
@@ -34,9 +31,9 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/login" element={<Login />} />
 
             <Route element={<MainLayout />}>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/discover" element={<DiscoverPage />} />
-              <Route path="/manage" element={<ManageEventsPage />} />
+              <Route path="/" element={<Navigate to="/plans" replace />} />
+              <Route path="/plans" element={<ManagePlansPage />} />
+              <Route path="/plans/:id" element={<PlanDetailsPage />} />
               <Route path="/app" element={<App />} />
             </Route>
 

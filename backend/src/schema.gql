@@ -6,16 +6,43 @@ type User {
   picture: String
 }
 
-type Event {
+type Category {
+  id: ID!
+  name: String!
+}
+
+type Destination {
+  id: ID!
+  name: String!
+}
+
+type Plan {
   id: ID!
   title: String!
-  description: String
   startDate: String!
   endDate: String!
-  location: String
-  creator: User!
-  followers: [User!]!
-  participants: [User!]!
+  destinations: [Destination!]!
+  userId: ID!
+  googleEventId: String
+}
+
+type Place {
+  id: ID!
+  name: String!
+  planId: ID!
+  destination: Destination!
+  category: Category!
+  priceRange: String
+  reviewLinks: [String!]!
+  notes: String
+  visitStatus: String!
+}
+
+type ScheduledActivity {
+  id: ID!
+  place: Place!
+  startTime: String!
+  endTime: String!
 }
 
 type DraftEvent {
@@ -34,39 +61,78 @@ type AssistantResponse {
 type Query {
   hello: String!
   me: User
-  events: [Event!]!
-  myEvents: [Event!]!
-  joinedEvents: [Event!]!
-  followedEvents: [Event!]!
+
+  categories: [Category!]!
+  destinations: [Destination!]!
+
+  myPlans: [Plan!]!
+  plan(id: ID!): Plan
+
+  placesForPlan(planId: ID!): [Place!]!
+  recommendedPlaces(destinationId: ID!): [Place!]!
+
+  scheduledActivitiesForPlan(planId: ID!): [ScheduledActivity!]!
 }
 
 type Mutation {
   loginWithGoogle(code: String!): User!
 
-  createEvent(
+  createCategory(name: String!): Category!
+  createDestination(name: String!): Destination!
+
+  createPlan(
     title: String!
-    description: String
     startDate: String!
     endDate: String!
-    location: String
-    autoFollow: Boolean
-  ): Event!
+    destinationIds: [ID!]!
+  ): Plan!
 
-  updateEvent(
+  updatePlan(
     id: ID!
     title: String
-    description: String
     startDate: String
     endDate: String
-    location: String
-  ): Event!
+    destinationIds: [ID!]
+  ): Plan!
 
-  deleteEvent(id: ID!): Boolean!
+  deletePlan(id: ID!): Boolean!
 
-  joinEvent(id: ID!): Event!
-  leaveEvent(id: ID!): Event!
-  followEvent(id: ID!): Event!
-  unfollowEvent(id: ID!): Event!
+  createPlace(
+    name: String!
+    planId: ID!
+    destinationId: ID!
+    categoryId: ID!
+    priceRange: String
+    reviewLinks: [String!]
+    notes: String
+  ): Place!
+
+  updatePlace(
+    id: ID!
+    name: String
+    categoryId: ID
+    priceRange: String
+    reviewLinks: [String!]
+    notes: String
+    visitStatus: String
+  ): Place!
+
+  deletePlace(id: ID!): Boolean!
+
+  createScheduledActivity(
+    placeId: ID!
+    startTime: String!
+    endTime: String!
+  ): ScheduledActivity!
+
+  updateScheduledActivity(
+    id: ID!
+    placeId: ID
+    startTime: String
+    endTime: String
+  ): ScheduledActivity!
+
+  deleteScheduledActivity(id: ID!): Boolean!
 
   askAssistant(message: String!, history: [MessageInput!]): AssistantResponse!
 }

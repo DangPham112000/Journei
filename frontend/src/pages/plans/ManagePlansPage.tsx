@@ -6,9 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -167,32 +164,34 @@ export default function ManagePlansPage() {
 
                   <div className="grid gap-2">
                     <Label>Start Date</Label>
-                    <Popover>
-                      <PopoverTrigger render={
-                        <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !startDate && "text-muted-foreground")} />
-                      }>
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {startDate ? format(startDate, "PPP") : <span>Pick a date</span>}
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={startDate} onSelect={setStartDate} />
-                      </PopoverContent>
-                    </Popover>
+                    <div className="relative">
+                      <CalendarIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <input
+                        type="datetime-local"
+                        className={cn(
+                          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-9",
+                          !startDate && "text-muted-foreground"
+                        )}
+                        value={startDate ? new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
+                        onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)}
+                      />
+                    </div>
                   </div>
 
                   <div className="grid gap-2">
                     <Label>End Date</Label>
-                    <Popover>
-                      <PopoverTrigger render={
-                        <Button variant={"outline"} className={cn("w-full justify-start text-left font-normal", !endDate && "text-muted-foreground")} />
-                      }>
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {endDate ? format(endDate, "PPP") : <span>Pick a date</span>}
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar mode="single" selected={endDate} onSelect={setEndDate} />
-                      </PopoverContent>
-                    </Popover>
+                    <div className="relative">
+                      <CalendarIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <input
+                        type="datetime-local"
+                        className={cn(
+                          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-9",
+                          !endDate && "text-muted-foreground"
+                        )}
+                        value={endDate ? new Date(endDate.getTime() - endDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
+                        onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)}
+                      />
+                    </div>
                   </div>
                 </div>
               </ScrollArea>

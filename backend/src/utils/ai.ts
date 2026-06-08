@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI, FunctionDeclaration, SchemaType } from '@google/generative-ai';
-import { Event, IEvent } from '../models/Event';
+import { Plan } from '../models/Plan';
 import { User } from '../models/User';
 import mongoose from 'mongoose';
 
@@ -13,40 +13,40 @@ const getUserProfileDeclaration: FunctionDeclaration = {
   },
 };
 
-const getUserEventsDeclaration: FunctionDeclaration = {
-  name: 'getUserEvents',
-  description: 'Gets all events relevant to the user, including events they created, joined, or followed.',
+const getUserPlansDeclaration: FunctionDeclaration = {
+  name: 'getUserPlans',
+  description: 'Gets all plans/trips created by the user.',
   parameters: {
     type: SchemaType.OBJECT,
     properties: {},
   },
 };
 
-const draftEventDeclaration: FunctionDeclaration = {
-  name: 'draftEvent',
-  description: 'Drafts a new event or updates an existing one based on the user\'s request. The user must explicitly ask to create or update an event before calling this. Always call this when drafting an event.',
+const draftPlanDeclaration: FunctionDeclaration = {
+  name: 'draftPlan',
+  description: 'Drafts a new plan or updates an existing one based on the user\'s request. The user must explicitly ask to create or update a plan before calling this. Always call this when drafting a plan.',
   parameters: {
     type: SchemaType.OBJECT,
     properties: {
       title: {
         type: SchemaType.STRING,
-        description: 'The title of the event.',
+        description: 'The title of the plan.',
       },
       description: {
         type: SchemaType.STRING,
-        description: 'The description of the event.',
+        description: 'The description of the plan.',
       },
       startDate: {
         type: SchemaType.STRING,
-        description: 'The start date of the event in ISO 8601 format.',
+        description: 'The start date of the plan in ISO 8601 format.',
       },
       endDate: {
         type: SchemaType.STRING,
-        description: 'The end date of the event in ISO 8601 format.',
+        description: 'The end date of the plan in ISO 8601 format.',
       },
       location: {
         type: SchemaType.STRING,
-        description: 'The location of the event.',
+        description: 'The location of the plan.',
       },
     },
     required: ['title', 'startDate', 'endDate'],
@@ -63,36 +63,17 @@ async function getUserProfile(userId: string) {
   };
 }
 
-async function getUserEvents(userId: string) {
-  const createdEvents = await Event.find({ creator: userId }).populate('creator followers participants');
-  const joinedEvents = await Event.find({ participants: userId }).populate('creator followers participants');
-  const followedEvents = await Event.find({ followers: userId }).populate('creator followers participants');
+async function getUserPlans(userId: string) {
+  const myPlans = await Plan.find({ userId }).populate('destinations');
 
   return {
-    createdEvents: createdEvents.map((e: any) => ({
-      id: e._id.toString(),
-      title: e.title,
-      description: e.description,
-      startDate: e.startDate.toISOString(),
-      endDate: e.endDate.toISOString(),
-      location: e.location,
-    })),
-    joinedEvents: joinedEvents.map((e: any) => ({
-      id: e._id.toString(),
-      title: e.title,
-      description: e.description,
-      startDate: e.startDate.toISOString(),
-      endDate: e.endDate.toISOString(),
-      location: e.location,
-    })),
-    followedEvents: followedEvents.map((e: any) => ({
-      id: e._id.toString(),
-      title: e.title,
-      description: e.description,
-      startDate: e.startDate.toISOString(),
-      endDate: e.endDate.toISOString(),
-      location: e.location,
-    })),
+    myPlans: myPlans.map((p: any) => ({
+      id: p._id.toString(),
+      title: p.title,
+      startDate: p.startDate.toISOString(),
+      endDate: p.endDate.toISOString(),
+      destinations: p.destinations.map((d: any) => d.name),
+    }))
   };
 }
 
@@ -110,17 +91,17 @@ export async function processAssistantMessage(userId: string, message: string, h
     tools: [{
       functionDeclarations: [
         getUserProfileDeclaration,
-        getUserEventsDeclaration,
-        draftEventDeclaration,
+        getUserPlansDeclaration,
+        draftPlanDeclaration,
       ],
     }],
-    systemInstruction: "You are a helpful journey planner AI assistant. You help the user manage their planned events and trips. You have access to tools to fetch the user's profile and their events. If the user asks to create or update an event, use the draftEvent tool to propose the details to them for confirmation. When calling draftEvent, also provide a helpful text response confirming you are drafting it."
+    systemInstruction: "You are a helpful journey planner AI assistant. You help the user manage their planned events and trips. You have access to tools to fetch the user's profile and their plans. If the user asks to create or update a plan, use the draftPlan tool to propose the details to them for confirmation. When calling draftPlan, also provide a helpful text response confirming you are drafting it."
   });
 
   const chat = model.startChat({ history: history || [] });
 
   let response = await chat.sendMessage(message);
-  let draftEvent = null;
+  let draftEvent = null; // using draftEvent property to match graphql schema AssistantResponse
 
   // Handle function calling
   const functionCalls = response.response.functionCalls();
@@ -131,11 +112,11 @@ export async function processAssistantMessage(userId: string, message: string, h
       if (call.name === 'getUserProfile') {
         const profile = await getUserProfile(userId);
         functionResponse = { response: profile };
-      } else if (call.name === 'getUserEvents') {
-        const events = await getUserEvents(userId);
-        functionResponse = { response: events };
-      } else if (call.name === 'draftEvent') {
-        // If the AI calls draftEvent, we extract the args and stop the loop,
+      } else if (call.name === 'getUserPlans') {
+        const plans = await getUserPlans(userId);
+        functionResponse = { response: plans };
+      } else if (call.name === 'draftPlan') {
+        // If the AI calls draftPlan, we extract the args and stop the loop,
         // sending it back to the client to confirm.
         const args = call.args as any;
         draftEvent = {
@@ -160,11 +141,11 @@ export async function processAssistantMessage(userId: string, message: string, h
     }
   }
 
-  // If the AI called draftEvent on the *second* pass (rare, but possible), check again
+  // If the AI called draftPlan on the *second* pass (rare, but possible), check again
   const secondFunctionCalls = response.response.functionCalls();
   if (!draftEvent && secondFunctionCalls && secondFunctionCalls.length > 0) {
     for (const call of secondFunctionCalls) {
-       if (call.name === 'draftEvent') {
+       if (call.name === 'draftPlan') {
         const args = call.args as any;
         draftEvent = {
           title: args.title,

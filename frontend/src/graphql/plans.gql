@@ -1,0 +1,189 @@
+query GetMyPlans {
+  myPlans {
+    id
+    title
+    startDate
+    endDate
+    destinations {
+      id
+      name
+    }
+  }
+}
+
+query GetPlan($id: ID!) {
+  plan(id: $id) {
+    id
+    title
+    startDate
+    endDate
+    destinations {
+      id
+      name
+    }
+  }
+}
+
+query GetDestinations {
+  destinations {
+    id
+    name
+  }
+}
+
+query GetCategories {
+  categories {
+    id
+    name
+  }
+}
+
+mutation CreatePlan(
+  $title: String!
+  $startDate: String!
+  $endDate: String!
+  $destinationIds: [ID!]!
+) {
+  createPlan(
+    title: $title
+    startDate: $startDate
+    endDate: $endDate
+    destinationIds: $destinationIds
+  ) {
+    id
+    title
+    startDate
+    endDate
+    destinations {
+      id
+      name
+    }
+  }
+}
+
+mutation DeletePlan($id: ID!) {
+  deletePlan(id: $id)
+}
+
+query GetPlacesForPlan($planId: ID!) {
+  placesForPlan(planId: $planId) {
+    id
+    name
+    priceRange
+    reviewLinks
+    notes
+    visitStatus
+    destination {
+      id
+      name
+    }
+    category {
+      id
+      name
+    }
+  }
+}
+
+query GetRecommendedPlaces($destinationId: ID!) {
+  recommendedPlaces(destinationId: $destinationId) {
+    id
+    name
+    priceRange
+    reviewLinks
+    notes
+    category {
+      id
+      name
+    }
+  }
+}
+
+mutation CreatePlace(
+  $name: String!
+  $planId: ID!
+  $destinationId: ID!
+  $categoryId: ID!
+  $priceRange: String
+  $reviewLinks: [String!]
+  $notes: String
+) {
+  createPlace(
+    name: $name
+    planId: $planId
+    destinationId: $destinationId
+    categoryId: $categoryId
+    priceRange: $priceRange
+    reviewLinks: $reviewLinks
+    notes: $notes
+  ) {
+    id
+    name
+  }
+}
+
+query GetScheduledActivitiesForPlan($planId: ID!) {
+  scheduledActivitiesForPlan(planId: $planId) {
+    id
+    startTime
+    endTime
+    place {
+      id
+      name
+      category {
+        name
+      }
+      destination {
+        name
+      }
+    }
+  }
+}
+
+mutation CreateScheduledActivity($placeId: ID!, $startTime: String!, $endTime: String!) {
+  createScheduledActivity(placeId: $placeId, startTime: $startTime, endTime: $endTime) {
+    id
+    startTime
+    endTime
+    place {
+      id
+      name
+    }
+  }
+}
+
+mutation DeleteScheduledActivity($id: ID!) {
+  deleteScheduledActivity(id: $id)
+}
+
+mutation UpdatePlaceVisitStatus($id: ID!, $visitStatus: String!) {
+  updatePlace(id: $id, visitStatus: $visitStatus) {
+    id
+    visitStatus
+  }
+}
+
+mutation CreateCategory($name: String!) {
+  createCategory(name: $name) {
+    id
+    name
+  }
+}
+
+mutation CreateDestination($name: String!) {
+  createDestination(name: $name) {
+    id
+    name
+  }
+}
+
+mutation UpdateScheduledActivity($id: ID!, $placeId: ID, $startTime: String, $endTime: String) {
+  updateScheduledActivity(id: $id, placeId: $placeId, startTime: $startTime, endTime: $endTime) {
+    id
+    startTime
+    endTime
+    place {
+      id
+      name
+    }
+  }
+}

@@ -17,24 +17,23 @@ export type AssistantResponse = {
   text: Scalars['String']['output'];
 };
 
+export type Category = {
+  __typename?: 'Category';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+};
+
+export type Destination = {
+  __typename?: 'Destination';
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+};
+
 export type DraftEvent = {
   __typename?: 'DraftEvent';
   description?: Maybe<Scalars['String']['output']>;
   endDate: Scalars['String']['output'];
   location?: Maybe<Scalars['String']['output']>;
-  startDate: Scalars['String']['output'];
-  title: Scalars['String']['output'];
-};
-
-export type Event = {
-  __typename?: 'Event';
-  creator: User;
-  description?: Maybe<Scalars['String']['output']>;
-  endDate: Scalars['String']['output'];
-  followers: Array<User>;
-  id: Scalars['ID']['output'];
-  location?: Maybe<Scalars['String']['output']>;
-  participants: Array<User>;
   startDate: Scalars['String']['output'];
   title: Scalars['String']['output'];
 };
@@ -51,14 +50,18 @@ export type MessagePartInput = {
 export type Mutation = {
   __typename?: 'Mutation';
   askAssistant: AssistantResponse;
-  createEvent: Event;
-  deleteEvent: Scalars['Boolean']['output'];
-  followEvent: Event;
-  joinEvent: Event;
-  leaveEvent: Event;
+  createCategory: Category;
+  createDestination: Destination;
+  createPlace: Place;
+  createPlan: Plan;
+  createScheduledActivity: ScheduledActivity;
+  deletePlace: Scalars['Boolean']['output'];
+  deletePlan: Scalars['Boolean']['output'];
+  deleteScheduledActivity: Scalars['Boolean']['output'];
   loginWithGoogle: User;
-  unfollowEvent: Event;
-  updateEvent: Event;
+  updatePlace: Place;
+  updatePlan: Plan;
+  updateScheduledActivity: ScheduledActivity;
 };
 
 
@@ -68,32 +71,53 @@ export type MutationAskAssistantArgs = {
 };
 
 
-export type MutationCreateEventArgs = {
-  autoFollow?: InputMaybe<Scalars['Boolean']['input']>;
-  description?: InputMaybe<Scalars['String']['input']>;
+export type MutationCreateCategoryArgs = {
+  name: Scalars['String']['input'];
+};
+
+
+export type MutationCreateDestinationArgs = {
+  name: Scalars['String']['input'];
+};
+
+
+export type MutationCreatePlaceArgs = {
+  categoryId: Scalars['ID']['input'];
+  destinationId: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  planId: Scalars['ID']['input'];
+  priceRange?: InputMaybe<Scalars['String']['input']>;
+  reviewLinks?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type MutationCreatePlanArgs = {
+  destinationIds: Array<Scalars['ID']['input']>;
   endDate: Scalars['String']['input'];
-  location?: InputMaybe<Scalars['String']['input']>;
   startDate: Scalars['String']['input'];
   title: Scalars['String']['input'];
 };
 
 
-export type MutationDeleteEventArgs = {
+export type MutationCreateScheduledActivityArgs = {
+  endTime: Scalars['String']['input'];
+  placeId: Scalars['ID']['input'];
+  startTime: Scalars['String']['input'];
+};
+
+
+export type MutationDeletePlaceArgs = {
   id: Scalars['ID']['input'];
 };
 
 
-export type MutationFollowEventArgs = {
+export type MutationDeletePlanArgs = {
   id: Scalars['ID']['input'];
 };
 
 
-export type MutationJoinEventArgs = {
-  id: Scalars['ID']['input'];
-};
-
-
-export type MutationLeaveEventArgs = {
+export type MutationDeleteScheduledActivityArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -103,28 +127,96 @@ export type MutationLoginWithGoogleArgs = {
 };
 
 
-export type MutationUnfollowEventArgs = {
+export type MutationUpdatePlaceArgs = {
+  categoryId?: InputMaybe<Scalars['ID']['input']>;
   id: Scalars['ID']['input'];
+  name?: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  priceRange?: InputMaybe<Scalars['String']['input']>;
+  reviewLinks?: InputMaybe<Array<Scalars['String']['input']>>;
+  visitStatus?: InputMaybe<Scalars['String']['input']>;
 };
 
 
-export type MutationUpdateEventArgs = {
-  description?: InputMaybe<Scalars['String']['input']>;
+export type MutationUpdatePlanArgs = {
+  destinationIds?: InputMaybe<Array<Scalars['ID']['input']>>;
   endDate?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
-  location?: InputMaybe<Scalars['String']['input']>;
   startDate?: InputMaybe<Scalars['String']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
+
+export type MutationUpdateScheduledActivityArgs = {
+  endTime?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['ID']['input'];
+  placeId?: InputMaybe<Scalars['ID']['input']>;
+  startTime?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type Place = {
+  __typename?: 'Place';
+  category: Category;
+  destination: Destination;
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  planId: Scalars['ID']['output'];
+  priceRange?: Maybe<Scalars['String']['output']>;
+  reviewLinks: Array<Scalars['String']['output']>;
+  visitStatus: Scalars['String']['output'];
+};
+
+export type Plan = {
+  __typename?: 'Plan';
+  destinations: Array<Destination>;
+  endDate: Scalars['String']['output'];
+  googleEventId?: Maybe<Scalars['String']['output']>;
+  id: Scalars['ID']['output'];
+  startDate: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  userId: Scalars['ID']['output'];
+};
+
 export type Query = {
   __typename?: 'Query';
-  events: Array<Event>;
-  followedEvents: Array<Event>;
+  categories: Array<Category>;
+  destinations: Array<Destination>;
   hello: Scalars['String']['output'];
-  joinedEvents: Array<Event>;
   me?: Maybe<User>;
-  myEvents: Array<Event>;
+  myPlans: Array<Plan>;
+  placesForPlan: Array<Place>;
+  plan?: Maybe<Plan>;
+  recommendedPlaces: Array<Place>;
+  scheduledActivitiesForPlan: Array<ScheduledActivity>;
+};
+
+
+export type QueryPlacesForPlanArgs = {
+  planId: Scalars['ID']['input'];
+};
+
+
+export type QueryPlanArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryRecommendedPlacesArgs = {
+  destinationId: Scalars['ID']['input'];
+};
+
+
+export type QueryScheduledActivitiesForPlanArgs = {
+  planId: Scalars['ID']['input'];
+};
+
+export type ScheduledActivity = {
+  __typename?: 'ScheduledActivity';
+  endTime: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  place: Place;
+  startTime: Scalars['String']['output'];
 };
 
 export type User = {
@@ -211,13 +303,17 @@ export type DirectiveResolverFn<TResult = Record<PropertyKey, never>, TParent = 
 export type ResolversTypes = {
   AssistantResponse: ResolverTypeWrapper<AssistantResponse>;
   Boolean: ResolverTypeWrapper<Scalars['Boolean']['output']>;
+  Category: ResolverTypeWrapper<Category>;
+  Destination: ResolverTypeWrapper<Destination>;
   DraftEvent: ResolverTypeWrapper<DraftEvent>;
-  Event: ResolverTypeWrapper<Event>;
   ID: ResolverTypeWrapper<Scalars['ID']['output']>;
   MessageInput: MessageInput;
   MessagePartInput: MessagePartInput;
   Mutation: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  Place: ResolverTypeWrapper<Place>;
+  Plan: ResolverTypeWrapper<Plan>;
   Query: ResolverTypeWrapper<Record<PropertyKey, never>>;
+  ScheduledActivity: ResolverTypeWrapper<ScheduledActivity>;
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   User: ResolverTypeWrapper<User>;
 };
@@ -226,13 +322,17 @@ export type ResolversTypes = {
 export type ResolversParentTypes = {
   AssistantResponse: AssistantResponse;
   Boolean: Scalars['Boolean']['output'];
+  Category: Category;
+  Destination: Destination;
   DraftEvent: DraftEvent;
-  Event: Event;
   ID: Scalars['ID']['output'];
   MessageInput: MessageInput;
   MessagePartInput: MessagePartInput;
   Mutation: Record<PropertyKey, never>;
+  Place: Place;
+  Plan: Plan;
   Query: Record<PropertyKey, never>;
+  ScheduledActivity: ScheduledActivity;
   String: Scalars['String']['output'];
   User: User;
 };
@@ -240,6 +340,16 @@ export type ResolversParentTypes = {
 export type AssistantResponseResolvers<ContextType = any, ParentType extends ResolversParentTypes['AssistantResponse'] = ResolversParentTypes['AssistantResponse']> = {
   draftEvent?: Resolver<Maybe<ResolversTypes['DraftEvent']>, ParentType, ContextType>;
   text?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type CategoryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Category'] = ResolversParentTypes['Category']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type DestinationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Destination'] = ResolversParentTypes['Destination']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
 export type DraftEventResolvers<ContextType = any, ParentType extends ResolversParentTypes['DraftEvent'] = ResolversParentTypes['DraftEvent']> = {
@@ -250,37 +360,61 @@ export type DraftEventResolvers<ContextType = any, ParentType extends ResolversP
   title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
-export type EventResolvers<ContextType = any, ParentType extends ResolversParentTypes['Event'] = ResolversParentTypes['Event']> = {
-  creator?: Resolver<ResolversTypes['User'], ParentType, ContextType>;
-  description?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  endDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  followers?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
-  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  location?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
-  participants?: Resolver<Array<ResolversTypes['User']>, ParentType, ContextType>;
-  startDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-};
-
 export type MutationResolvers<ContextType = any, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   askAssistant?: Resolver<ResolversTypes['AssistantResponse'], ParentType, ContextType, RequireFields<MutationAskAssistantArgs, 'message'>>;
-  createEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationCreateEventArgs, 'endDate' | 'startDate' | 'title'>>;
-  deleteEvent?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteEventArgs, 'id'>>;
-  followEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationFollowEventArgs, 'id'>>;
-  joinEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationJoinEventArgs, 'id'>>;
-  leaveEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationLeaveEventArgs, 'id'>>;
+  createCategory?: Resolver<ResolversTypes['Category'], ParentType, ContextType, RequireFields<MutationCreateCategoryArgs, 'name'>>;
+  createDestination?: Resolver<ResolversTypes['Destination'], ParentType, ContextType, RequireFields<MutationCreateDestinationArgs, 'name'>>;
+  createPlace?: Resolver<ResolversTypes['Place'], ParentType, ContextType, RequireFields<MutationCreatePlaceArgs, 'categoryId' | 'destinationId' | 'name' | 'planId'>>;
+  createPlan?: Resolver<ResolversTypes['Plan'], ParentType, ContextType, RequireFields<MutationCreatePlanArgs, 'destinationIds' | 'endDate' | 'startDate' | 'title'>>;
+  createScheduledActivity?: Resolver<ResolversTypes['ScheduledActivity'], ParentType, ContextType, RequireFields<MutationCreateScheduledActivityArgs, 'endTime' | 'placeId' | 'startTime'>>;
+  deletePlace?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeletePlaceArgs, 'id'>>;
+  deletePlan?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeletePlanArgs, 'id'>>;
+  deleteScheduledActivity?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteScheduledActivityArgs, 'id'>>;
   loginWithGoogle?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationLoginWithGoogleArgs, 'code'>>;
-  unfollowEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationUnfollowEventArgs, 'id'>>;
-  updateEvent?: Resolver<ResolversTypes['Event'], ParentType, ContextType, RequireFields<MutationUpdateEventArgs, 'id'>>;
+  updatePlace?: Resolver<ResolversTypes['Place'], ParentType, ContextType, RequireFields<MutationUpdatePlaceArgs, 'id'>>;
+  updatePlan?: Resolver<ResolversTypes['Plan'], ParentType, ContextType, RequireFields<MutationUpdatePlanArgs, 'id'>>;
+  updateScheduledActivity?: Resolver<ResolversTypes['ScheduledActivity'], ParentType, ContextType, RequireFields<MutationUpdateScheduledActivityArgs, 'id'>>;
+};
+
+export type PlaceResolvers<ContextType = any, ParentType extends ResolversParentTypes['Place'] = ResolversParentTypes['Place']> = {
+  category?: Resolver<ResolversTypes['Category'], ParentType, ContextType>;
+  destination?: Resolver<ResolversTypes['Destination'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  notes?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  planId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  priceRange?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  reviewLinks?: Resolver<Array<ResolversTypes['String']>, ParentType, ContextType>;
+  visitStatus?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+};
+
+export type PlanResolvers<ContextType = any, ParentType extends ResolversParentTypes['Plan'] = ResolversParentTypes['Plan']> = {
+  destinations?: Resolver<Array<ResolversTypes['Destination']>, ParentType, ContextType>;
+  endDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  googleEventId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  startDate?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  title?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  userId?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
 };
 
 export type QueryResolvers<ContextType = any, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  events?: Resolver<Array<ResolversTypes['Event']>, ParentType, ContextType>;
-  followedEvents?: Resolver<Array<ResolversTypes['Event']>, ParentType, ContextType>;
+  categories?: Resolver<Array<ResolversTypes['Category']>, ParentType, ContextType>;
+  destinations?: Resolver<Array<ResolversTypes['Destination']>, ParentType, ContextType>;
   hello?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  joinedEvents?: Resolver<Array<ResolversTypes['Event']>, ParentType, ContextType>;
   me?: Resolver<Maybe<ResolversTypes['User']>, ParentType, ContextType>;
-  myEvents?: Resolver<Array<ResolversTypes['Event']>, ParentType, ContextType>;
+  myPlans?: Resolver<Array<ResolversTypes['Plan']>, ParentType, ContextType>;
+  placesForPlan?: Resolver<Array<ResolversTypes['Place']>, ParentType, ContextType, RequireFields<QueryPlacesForPlanArgs, 'planId'>>;
+  plan?: Resolver<Maybe<ResolversTypes['Plan']>, ParentType, ContextType, RequireFields<QueryPlanArgs, 'id'>>;
+  recommendedPlaces?: Resolver<Array<ResolversTypes['Place']>, ParentType, ContextType, RequireFields<QueryRecommendedPlacesArgs, 'destinationId'>>;
+  scheduledActivitiesForPlan?: Resolver<Array<ResolversTypes['ScheduledActivity']>, ParentType, ContextType, RequireFields<QueryScheduledActivitiesForPlanArgs, 'planId'>>;
+};
+
+export type ScheduledActivityResolvers<ContextType = any, ParentType extends ResolversParentTypes['ScheduledActivity'] = ResolversParentTypes['ScheduledActivity']> = {
+  endTime?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  place?: Resolver<ResolversTypes['Place'], ParentType, ContextType>;
+  startTime?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
 };
 
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
@@ -293,9 +427,13 @@ export type UserResolvers<ContextType = any, ParentType extends ResolversParentT
 
 export type Resolvers<ContextType = any> = {
   AssistantResponse?: AssistantResponseResolvers<ContextType>;
+  Category?: CategoryResolvers<ContextType>;
+  Destination?: DestinationResolvers<ContextType>;
   DraftEvent?: DraftEventResolvers<ContextType>;
-  Event?: EventResolvers<ContextType>;
   Mutation?: MutationResolvers<ContextType>;
+  Place?: PlaceResolvers<ContextType>;
+  Plan?: PlanResolvers<ContextType>;
   Query?: QueryResolvers<ContextType>;
+  ScheduledActivity?: ScheduledActivityResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
 };

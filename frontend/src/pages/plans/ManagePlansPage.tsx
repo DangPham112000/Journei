@@ -32,6 +32,7 @@ export default function ManagePlansPage() {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [selectedDestinations, setSelectedDestinations] = useState<string[]>([]);
+  const [errors, setErrors] = useState<{title?: string, destination?: string, startDate?: string, endDate?: string}>({});
 
   if (loading) {
     return (
@@ -49,10 +50,27 @@ export default function ManagePlansPage() {
     setStartDate(undefined);
     setEndDate(undefined);
     setSelectedDestinations([]);
+    setErrors({});
   };
 
   const handleCreateSubmit = async () => {
-    if (!startDate || !endDate || selectedDestinations.length === 0) return;
+    const newErrors: {title?: string, destination?: string, startDate?: string, endDate?: string} = {};
+    if (!title.trim()) newErrors.title = 'Title is required';
+    if (selectedDestinations.length === 0) newErrors.destination = 'Destination is required';
+    if (!startDate) newErrors.startDate = 'Start date is required';
+    if (!endDate) newErrors.endDate = 'End date is required';
+
+    if (startDate && endDate && endDate < startDate) {
+      newErrors.endDate = 'End date must be after or equal to start date';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    if (!startDate || !endDate) return;
+
     try {
       const res = await createPlan({
         variables: {
@@ -138,19 +156,27 @@ export default function ManagePlansPage() {
               <ScrollArea className="flex-1 px-6 md:border-r">
                 <div className="grid gap-4 py-4 pr-2">
                   <div className="grid gap-2">
-                    <Label htmlFor="title">Title</Label>
-                    <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Summer in Da Lat" />
+                    <Label htmlFor="title" className={errors.title ? "text-destructive" : ""}>Title</Label>
+                    <Input id="title" value={title} onChange={e => { setTitle(e.target.value); setErrors(prev => ({...prev, title: undefined})); }} placeholder="e.g. Summer in Da Lat" aria-invalid={!!errors.title} className={errors.title ? "border-destructive focus-visible:ring-destructive/50" : ""} />
+                    {errors.title && <p className="text-sm text-destructive">{errors.title}</p>}
                   </div>
 
                   <div className="grid gap-2">
-                    <Label>Destination (Primary)</Label>
+                    <Label className={errors.destination ? "text-destructive" : ""}>Destination (Primary)</Label>
                     <div className="flex gap-2">
                       <Select
                         value={selectedDestinations[0] || ''}
-                        onValueChange={(val) => val && setSelectedDestinations([val])}
+                        onValueChange={(val) => {
+                          if (val) {
+                            setSelectedDestinations([val]);
+                            setErrors(prev => ({...prev, destination: undefined}));
+                          }
+                        }}
                       >
-                        <SelectTrigger className="flex-grow">
-                          <SelectValue placeholder="Select a destination" />
+                        <SelectTrigger className={cn("flex-grow", errors.destination && "border-destructive ring-destructive/20")}>
+                          <SelectValue placeholder="Select a destination" className={cn(!selectedDestinations[0] && "text-muted-foreground")}>
+                            {selectedDestinations[0] ? destData?.destinations.find(d => d.id === selectedDestinations[0])?.name : "Select a destination"}
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {destData?.destinations.map(d => (
@@ -160,38 +186,51 @@ export default function ManagePlansPage() {
                       </Select>
                       <Button variant="outline" onClick={() => setAddDestModalOpen(true)}><Plus className="w-4 h-4"/></Button>
                     </div>
+                    <p className="text-xs text-muted-foreground">You can add more destinations later.</p>
+                    {errors.destination && <p className="text-sm text-destructive">{errors.destination}</p>}
                   </div>
 
                   <div className="grid gap-2">
-                    <Label>Start Date</Label>
+                    <Label className={errors.startDate ? "text-destructive" : ""}>Start Date</Label>
                     <div className="relative">
                       <CalendarIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <input
                         type="datetime-local"
                         className={cn(
                           "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-9",
-                          !startDate && "text-muted-foreground"
+                          !startDate && "text-muted-foreground",
+                          errors.startDate && "border-destructive focus-visible:ring-destructive/50"
                         )}
                         value={startDate ? new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
-                        onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)}
+                        onChange={(e) => {
+                          setStartDate(e.target.value ? new Date(e.target.value) : undefined);
+                          setErrors(prev => ({...prev, startDate: undefined}));
+                        }}
                       />
                     </div>
+                    {errors.startDate && <p className="text-sm text-destructive">{errors.startDate}</p>}
                   </div>
 
                   <div className="grid gap-2">
-                    <Label>End Date</Label>
+                    <Label className={errors.endDate ? "text-destructive" : ""}>End Date</Label>
                     <div className="relative">
                       <CalendarIcon className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
                       <input
                         type="datetime-local"
+                        min={startDate ? new Date(startDate.getTime() - startDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : undefined}
                         className={cn(
                           "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-9",
-                          !endDate && "text-muted-foreground"
+                          !endDate && "text-muted-foreground",
+                          errors.endDate && "border-destructive focus-visible:ring-destructive/50"
                         )}
                         value={endDate ? new Date(endDate.getTime() - endDate.getTimezoneOffset() * 60000).toISOString().slice(0, 16) : ''}
-                        onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)}
+                        onChange={(e) => {
+                          setEndDate(e.target.value ? new Date(e.target.value) : undefined);
+                          setErrors(prev => ({...prev, endDate: undefined}));
+                        }}
                       />
                     </div>
+                    {errors.endDate && <p className="text-sm text-destructive">{errors.endDate}</p>}
                   </div>
                 </div>
               </ScrollArea>
@@ -207,7 +246,7 @@ export default function ManagePlansPage() {
           <DialogFooter className="p-6 pt-4 border-t">
             <div className="flex gap-2 w-full sm:w-auto sm:justify-end">
               <Button variant="outline" className="flex-1 sm:flex-none" onClick={handleCreateClose}>Cancel</Button>
-              <Button className="flex-1 sm:flex-none" onClick={handleCreateSubmit} disabled={!title || !startDate || !endDate || selectedDestinations.length === 0}>Create</Button>
+              <Button className="flex-1 sm:flex-none" onClick={handleCreateSubmit}>Create</Button>
             </div>
           </DialogFooter>
         </DialogContent>

@@ -1,18 +1,14 @@
 {
   "name": "journey-planner-root",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
   "scripts": {
-    "start": "cross-env MOCK_MODE=true VITE_MOCK_MODE=true concurrently \"yarn workspace backend dev:mock\" \"yarn dev:frontend\"",
-    "start:prod": "concurrently \"yarn dev:backend\" \"yarn dev:frontend\"",
-    "dev:backend": "yarn workspace backend dev",
-    "dev:frontend": "yarn workspace frontend dev",
-    "build:backend": "yarn workspace backend build",
-    "build:frontend": "yarn workspace frontend build",
-    "generate": "concurrently \"yarn workspace backend generate\" \"yarn workspace frontend generate\""
+    "start": "cross-env MOCK_MODE=true VITE_MOCK_MODE=true concurrently \"pnpm --filter backend dev:mock\" \"pnpm dev:frontend\"",
+    "start:prod": "concurrently \"pnpm dev:backend\" \"pnpm dev:frontend\"",
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "build:backend": "pnpm --filter backend build",
+    "build:frontend": "pnpm --filter frontend build",
+    "generate": "concurrently \"pnpm --filter backend generate\" \"pnpm --filter frontend generate\""
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

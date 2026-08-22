@@ -1,0 +1,8 @@
+packages:
+  - "frontend"
+  - "backend"
+
+allowBuilds:
+  "@apollo/protobufjs": true
+  mongodb-memory-server: true
+  msw: true

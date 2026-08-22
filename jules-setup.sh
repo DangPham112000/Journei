@@ -4,16 +4,19 @@
 # This script installs dependencies, generates GraphQL types, and builds both backend and frontend.
 # It is intended to be used by Jules as a setup script for faster startups in new sessions.
 
+echo "Installing pnpm..."
+corepack enable && corepack prepare pnpm@latest --activate
+
 echo "Installing dependencies..."
-yarn install
+pnpm install
 
 echo "Generating GraphQL types..."
-yarn generate
+pnpm generate
 
 echo "Building backend..."
-yarn build:backend
+pnpm build:backend
 
 echo "Building frontend..."
-yarn build:frontend
+pnpm build:frontend
 
 echo "Setup complete! The environment is ready."

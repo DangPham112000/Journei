@@ -6,13 +6,16 @@ WORKDIR /app
 # Install dependencies needed for node-gyp (sometimes required for some packages)
 RUN apk add --no-cache python3 make g++
 
-# Copy package.json and yarn.lock
-COPY package.json yarn.lock ./
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy package.json and pnpm lockfile
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
 COPY frontend/package.json frontend/
 COPY backend/package.json backend/
 
-# Install dependencies using yarn workspace
-RUN yarn install --frozen-lockfile
+# Install dependencies using pnpm
+RUN pnpm install --frozen-lockfile
 
 # Copy the rest of the application code
 COPY . .
@@ -28,8 +31,8 @@ ARG VITE_GOOGLE_MAPS_API_KEY
 ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
 ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
 
-RUN yarn generate
-RUN yarn build
+RUN pnpm generate
+RUN pnpm build
 
 # Production stage
 FROM nginx:alpine

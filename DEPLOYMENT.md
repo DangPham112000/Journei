@@ -106,6 +106,11 @@ To serve your app nicely (e.g., `journei.yourdomain.com`), use Cloudflare to man
    - Go to the **SSL/TLS** tab in Cloudflare.
    - Set the encryption mode to **Flexible** or **Full**. (Since our Nginx currently listens on port 80, Flexible is usually easiest to start with. If you configure SSL on Nginx later, use Full).
 
+4. **Shared host Nginx:**
+   - Ports 80/443 on the VPS belong to an Nginx installed on the host (`/etc/nginx/sites-enabled/`), so several apps can share the server.
+   - The `nginx-proxy` container only listens on `127.0.0.1:8081`, and the host site for `journei.<domain>` proxies to it.
+   - Do not publish `80:80` or `443:443` from `docker-compose.yml` again: the container would fail to start because the host Nginx already holds those ports.
+
 ---
 
 ## 3. VPS Application Setup

@@ -3,8 +3,9 @@ services:
     image: nginx:alpine
     container_name: journei-nginx-proxy
     ports:
-      - "80:80"
-      - "443:443"
+      # Only reachable from the VPS itself. The host's nginx owns ports 80/443
+      # and proxies journei.<domain> here, so other apps can share the server.
+      - "127.0.0.1:8081:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:

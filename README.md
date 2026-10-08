@@ -114,17 +114,17 @@ These credentials are used to authenticate users via Google OAuth and request ac
 
 ### Local Development
 
-We use [Yarn Workspaces](https://yarnpkg.com/features/workspaces) to manage dependencies.
+We use [pnpm Workspaces](https://pnpm.io/workspaces) to manage dependencies.
 
 1. Ensure you are in the root directory.
-2. Install dependencies for all workspaces: `yarn install`
+2. Install dependencies for all workspaces: `pnpm install`
 3. Run the development environment:
    ```bash
-   yarn start
+   pnpm start
    ```
 
 **Mock Mode Details:**
-By default, `yarn start` spins up the application in a sandboxed **Mock Mode**. You do not need any environment variables or external API keys to start working!
+By default, `pnpm start` spins up the application in a sandboxed **Mock Mode**. You do not need any environment variables or external API keys to start working!
 - **Database:** An in-memory MongoDB instance is automatically created and seeded with a mock user and events.
 - **Authentication:** Google OAuth is bypassed via a local mock endpoint.
 - **Maps:** Google Maps integration is mocked seamlessly via Vite aliases.
@@ -187,7 +187,7 @@ For a comprehensive, step-by-step guide on configuring each of these components,
 
 ### GraphQL Code Generation
 This project uses GraphQL Code Generator to automatically create TypeScript types and Apollo hooks from `.gql` files.
-- To generate types for both backend and frontend, run: `yarn generate`
+- To generate types for both backend and frontend, run: `pnpm generate`
 
 ## Features
 

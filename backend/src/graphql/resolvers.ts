@@ -1,5 +1,3 @@
-import { OAuth2Client } from 'google-auth-library';
-import jwt from 'jsonwebtoken';
 import { User } from '../models/User';
 import { Category } from '../models/Category';
 import { Destination } from '../models/Destination';
@@ -9,12 +7,6 @@ import { ScheduledActivity } from '../models/ScheduledActivity';
 import { processAssistantMessage } from '../utils/ai';
 import dotenv from 'dotenv';
 dotenv.config();
-
-const oAuth2Client = new OAuth2Client(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  'postmessage', // required for flow: 'auth-code' in react-oauth/google
-);
 
 const requireAuth = (resolver: any) => async (parent: any, args: any, context: any, info: any) => {
   if (!context.user) throw new Error('Not authenticated');
@@ -108,71 +100,6 @@ export const resolvers = {
   },
 
   Mutation: {
-    loginWithGoogle: async (_: any, { code }: { code: string }, context: any) => {
-      try {
-        const { tokens } = await oAuth2Client.getToken(code);
-
-        if (!tokens.id_token) {
-          throw new Error('No id_token in response');
-        }
-
-        const ticket = await oAuth2Client.verifyIdToken({
-          idToken: tokens.id_token,
-          audience: process.env.GOOGLE_CLIENT_ID,
-        });
-
-        const payload = ticket.getPayload();
-
-        if (!payload || !payload.email) {
-          throw new Error('Invalid Google payload');
-        }
-
-        const { sub: googleId, email, name, picture } = payload;
-
-        let user = await User.findOne({ googleId });
-
-        if (!user) {
-          user = await User.create({
-            googleId,
-            email,
-            name: name || 'Unknown Name',
-            picture,
-            refreshToken: tokens.refresh_token,
-          });
-        } else if (tokens.refresh_token) {
-          user.refreshToken = tokens.refresh_token;
-          await user.save();
-        }
-
-        const jwtPayload = {
-          id: user._id,
-          email: user.email,
-        };
-
-        if (!process.env.JWT_SECRET) {
-          throw new Error('JWT_SECRET environment variable is not set');
-        }
-
-        const token = jwt.sign(jwtPayload, process.env.JWT_SECRET, {
-          expiresIn: '7d',
-        });
-
-        if (context.res) {
-          context.res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-          });
-        }
-
-        return user;
-      } catch (error) {
-        console.error('Error during Google login:', error);
-        throw new Error('Failed to login with Google');
-      }
-    },
-
     createCategory: requireAuth(async (_: any, { name }: { name: string }) => {
       const existing = await Category.findOne({ name });
       if (existing) return existing;

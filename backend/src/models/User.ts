@@ -1,7 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IUser extends Document {
-  googleId: string;
+  clerkId?: string;
+  googleId?: string;
   email: string;
   name: string;
   picture?: string;
@@ -9,7 +10,10 @@ export interface IUser extends Document {
 }
 
 const UserSchema: Schema = new Schema({
-  googleId: { type: String, required: true, unique: true },
+  // Clerk user id ("user_..."); set on the user's first Clerk sign-in.
+  clerkId: { type: String, unique: true, sparse: true },
+  // Kept for users from the old Google login and Clerk users who sign in with Google.
+  googleId: { type: String, unique: true, sparse: true },
   email: { type: String, required: true },
   name: { type: String, required: true },
   picture: { type: String },

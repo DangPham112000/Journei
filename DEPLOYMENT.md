@@ -130,9 +130,7 @@ Before the first deployment, you need to prepare the application directory and e
 4. Paste the following configuration, filling in your specific details (press `i` to enter insert mode):
    ```env
    # Backend Variables
-   GOOGLE_CLIENT_ID=your_google_oauth_client_id
-   GOOGLE_CLIENT_SECRET=your_google_oauth_client_secret
-   JWT_SECRET=a_super_secure_random_string_here
+   CLERK_SECRET_KEY=sk_live_your_clerk_secret_key
    DOMAIN=journei.yourdomain.com
 
    # AI Assistant Variables
@@ -181,12 +179,12 @@ Add the following secrets:
   - **Secret:** Paste the entire contents of the **private** SSH key (`github-actions-key`) you generated in Step 1. (This acts as the highly secure password that proves the automated workflow has the right to log into your server as the `VPS_USERNAME`).
 - **Name:** `GHCR_PAT`
   - **Secret:** Paste the Personal Access Token you generated in step 4.1. (The workflow uses this to log into the GitHub Container Registry to upload the Docker images).
-- **Name:** `VITE_GOOGLE_CLIENT_ID`
-  - **Secret:** Paste your Google OAuth Client ID here. This is required to build the frontend application correctly.
+- **Name:** `VITE_CLERK_PUBLISHABLE_KEY`
+  - **Secret:** Paste your Clerk publishable key (`pk_live_...`) here. This is required to build the frontend application correctly; the workflow fails without it.
 - **Name:** `VITE_GOOGLE_MAPS_API_KEY`
   - **Secret:** Paste your Google Maps API Key here. This is required to build the frontend application correctly.
 
-*Note: Since `VITE_GOOGLE_CLIENT_ID` and `VITE_GOOGLE_MAPS_API_KEY` are built directly into the frontend image using GitHub Secrets, you no longer need them in the `.env` file on your VPS.*
+*Note: Since `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_GOOGLE_MAPS_API_KEY` are built directly into the frontend image using GitHub Secrets, you no longer need them in the `.env` file on your VPS.*
 
 ### 4.3 Configure AI Assistant (Gemini API Key)
 

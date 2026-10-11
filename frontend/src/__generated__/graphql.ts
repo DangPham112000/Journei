@@ -63,7 +63,6 @@ export type Mutation = {
   deletePlace: Scalars['Boolean']['output'];
   deletePlan: Scalars['Boolean']['output'];
   deleteScheduledActivity: Scalars['Boolean']['output'];
-  loginWithGoogle: User;
   updatePlace: Place;
   updatePlan: Plan;
   updateScheduledActivity: ScheduledActivity;
@@ -124,11 +123,6 @@ export type MutationDeletePlanArgs = {
 
 export type MutationDeleteScheduledActivityArgs = {
   id: Scalars['ID']['input'];
-};
-
-
-export type MutationLoginWithGoogleArgs = {
-  code: Scalars['String']['input'];
 };
 
 
@@ -227,7 +221,7 @@ export type ScheduledActivity = {
 export type User = {
   __typename?: 'User';
   email: Scalars['String']['output'];
-  googleId: Scalars['String']['output'];
+  googleId?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   picture?: Maybe<Scalars['String']['output']>;
@@ -237,13 +231,6 @@ export type GetHelloQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetHelloQuery = { hello: string };
-
-export type LoginWithGoogleMutationVariables = Exact<{
-  code: string;
-}>;
-
-
-export type LoginWithGoogleMutation = { loginWithGoogle: { id: string, name: string, email: string, picture: string | null } };
 
 export type GetMyPlansQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -412,42 +399,6 @@ export type GetHelloQueryHookResult = ReturnType<typeof useGetHelloQuery>;
 export type GetHelloLazyQueryHookResult = ReturnType<typeof useGetHelloLazyQuery>;
 export type GetHelloSuspenseQueryHookResult = ReturnType<typeof useGetHelloSuspenseQuery>;
 export type GetHelloQueryResult = Apollo.QueryResult<GetHelloQuery, GetHelloQueryVariables>;
-export const LoginWithGoogleDocument = gql`
-    mutation LoginWithGoogle($code: String!) {
-  loginWithGoogle(code: $code) {
-    id
-    name
-    email
-    picture
-  }
-}
-    `;
-export type LoginWithGoogleMutationFn = Apollo.MutationFunction<LoginWithGoogleMutation, LoginWithGoogleMutationVariables>;
-
-/**
- * __useLoginWithGoogleMutation__
- *
- * To run a mutation, you first call `useLoginWithGoogleMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useLoginWithGoogleMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [loginWithGoogleMutation, { data, loading, error }] = useLoginWithGoogleMutation({
- *   variables: {
- *      code: // value for 'code'
- *   },
- * });
- */
-export function useLoginWithGoogleMutation(baseOptions?: Apollo.MutationHookOptions<LoginWithGoogleMutation, LoginWithGoogleMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<LoginWithGoogleMutation, LoginWithGoogleMutationVariables>(LoginWithGoogleDocument, options);
-      }
-export type LoginWithGoogleMutationHookResult = ReturnType<typeof useLoginWithGoogleMutation>;
-export type LoginWithGoogleMutationResult = Apollo.MutationResult<LoginWithGoogleMutation>;
-export type LoginWithGoogleMutationOptions = Apollo.BaseMutationOptions<LoginWithGoogleMutation, LoginWithGoogleMutationVariables>;
 export const GetMyPlansDocument = gql`
     query GetMyPlans {
   myPlans {

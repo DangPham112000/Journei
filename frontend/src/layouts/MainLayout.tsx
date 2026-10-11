@@ -1,7 +1,8 @@
-import { Navigate, Outlet, Link as RouterLink } from 'react-router-dom';
+import { Outlet, Link as RouterLink } from 'react-router-dom';
+import { SignOutButton, UserButton } from '@clerk/react';
 import { useMeQuery } from '../__generated__/graphql';
 import { Button } from '@/components/ui/button';
-import { Loader2, Menu, Map as MapIcon, User } from 'lucide-react';
+import { Loader2, Menu, Map as MapIcon } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -24,8 +25,18 @@ export default function MainLayout() {
     );
   }
 
+  // Signed in with Clerk, but the backend could not resolve the account.
   if (error || !data?.me) {
-    return <Navigate to="/login" replace />;
+    return (
+      <div className="h-screen flex flex-col items-center justify-center gap-4 p-4 text-center">
+        <p className="text-sm text-muted-foreground">
+          We couldn't load your account. Please try signing in again.
+        </p>
+        <SignOutButton>
+          <Button variant="outline">Sign out</Button>
+        </SignOutButton>
+      </div>
+    );
   }
 
   return (
@@ -40,8 +51,8 @@ export default function MainLayout() {
           <div className="hidden md:flex items-center space-x-2">
             <NavLinks onClick={() => setIsMobileMenuOpen(false)} />
             <div className="flex items-center gap-2 ml-4 pl-4 border-l">
-              <User className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">{data.me.name}</span>
+              <UserButton />
             </div>
           </div>
 
@@ -62,7 +73,7 @@ export default function MainLayout() {
                 <div className="flex flex-col gap-2 mt-6">
                   <NavLinks onClick={() => setIsMobileMenuOpen(false)} />
                   <div className="mt-4 pt-4 border-t flex items-center gap-2 px-4">
-                    <User className="h-4 w-4 text-muted-foreground" />
+                    <UserButton />
                     <span className="text-sm font-medium">{data.me.name}</span>
                   </div>
                 </div>

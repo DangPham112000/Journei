@@ -26,9 +26,9 @@ WORKDIR /app/frontend
 # but if we wanted sub-path routing, we'd use it here.
 # For subdomain routing, the default base '/' works perfectly.
 
-ARG VITE_GOOGLE_CLIENT_ID
+ARG VITE_CLERK_PUBLISHABLE_KEY
 ARG VITE_GOOGLE_MAPS_API_KEY
-ENV VITE_GOOGLE_CLIENT_ID=$VITE_GOOGLE_CLIENT_ID
+ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_GOOGLE_MAPS_API_KEY=$VITE_GOOGLE_MAPS_API_KEY
 
 RUN pnpm generate

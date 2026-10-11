@@ -9,7 +9,7 @@ export default defineConfig(({ mode }) => {
   const isMockMode = env.VITE_MOCK_MODE === 'true';
 
   const mockAliases: Record<string, string> = isMockMode ? {
-    '@react-oauth/google': path.resolve(__dirname, './src/__mocks__/@react-oauth/google.tsx'),
+    '@clerk/react': path.resolve(__dirname, './src/__mocks__/@clerk/react.tsx'),
     '@vis.gl/react-google-maps': path.resolve(__dirname, './src/__mocks__/@vis.gl/react-google-maps.tsx'),
   } : {};
 
@@ -34,6 +34,10 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
+              // Before the react checks, since the path contains "@clerk/react"
+              if (id.includes('@clerk')) {
+                return 'clerk-vendor';
+              }
               if (id.includes('react-dom')) {
                 return 'react-dom-vendor';
               }
@@ -52,7 +56,7 @@ export default defineConfig(({ mode }) => {
               if (id.includes('@apollo')) {
                 return 'apollo-vendor';
               }
-              if (id.includes('@vis.gl') || id.includes('@react-oauth')) {
+              if (id.includes('@vis.gl')) {
                 return 'google-vendor';
               }
               if (id.includes('shadcn') || id.includes('@base-ui') || id.includes('lucide-react') || id.includes('tailwind') || id.includes('clsx')) {

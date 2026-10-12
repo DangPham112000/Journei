@@ -184,3 +184,17 @@ This project uses GraphQL Code Generator to automatically create TypeScript type
 - **Interactive Map:** Click to drop pins on locations you want to visit, or paste Google Maps links to resolve coordinates.
 - **Calendar Integration:** Authenticate with Google Calendar to view your free time and automatically create "Journey" events.
 - **Data Persistence:** Journeys and pinned locations are saved to a MongoDB database.
+
+## Connect your AI agent (MCP)
+
+Journei exposes an [MCP](https://modelcontextprotocol.io) server, so you can plan trips from your own AI agent (Claude, Cursor, ...) using your own AI subscription. Journei does not call any AI model itself.
+
+- **URL:** `https://<your-journei-domain>/mcp` (locally: `http://localhost:4000/mcp`)
+- **Transport:** Streamable HTTP. **Sign-in:** OAuth through Clerk. Your agent opens a browser window, you sign in to Journei and approve access.
+- **Claude Code:** `claude mcp add --transport http journei https://<your-journei-domain>/mcp`, then run `/mcp` and choose *Authenticate*.
+- **Claude.ai / Claude Desktop:** *Settings → Connectors → Add custom connector*, paste the URL.
+- **Cursor and others:** add an HTTP/remote MCP server with the same URL.
+
+Tools: `list_plans`, `get_plan`, `list_destinations`, `list_categories`, `create_destination`, `create_category`, `recommended_places`, `create_plan`, `update_plan`, `create_place`, `update_place`, `create_scheduled_activity`, `update_scheduled_activity`. An agent can only see and change the signed-in user's own plans, and cannot delete anything.
+
+Operator setup: in the Clerk dashboard enable *OAuth applications → Dynamic client registration*, and set `CLERK_PUBLISHABLE_KEY` on the backend (it is used to advertise Clerk as the authorization server). With `pnpm start` (Mock Mode) `/mcp` needs no sign-in.

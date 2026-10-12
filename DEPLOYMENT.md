@@ -131,6 +131,7 @@ Before the first deployment, you need to prepare the application directory and e
    ```env
    # Backend Variables
    CLERK_SECRET_KEY=sk_live_your_clerk_secret_key
+   CLERK_PUBLISHABLE_KEY=pk_live_your_clerk_publishable_key
    DOMAIN=journei.yourdomain.com
 
    # AI Assistant Variables

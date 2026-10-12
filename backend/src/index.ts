@@ -12,6 +12,7 @@ import { logger } from './utils/logger';
 import { graphqlLoggerPlugin } from './utils/graphqlLogger';
 import { getUserFromAuthHeader, type AuthUser } from './auth';
 import { User } from './models/User';
+import { createMcpRouter } from './mcp';
 
 const typeDefs = readFileSync(path.join(__dirname, 'schema.gql'), 'utf8');
 
@@ -74,9 +75,13 @@ async function startServer() {
     },
   }));
 
+  // MCP server: lets users connect their own AI agent (Claude, Cursor, ...)
+  app.use(createMcpRouter());
+
   app.listen(PORT, () => {
     logger.info(`Server is running at http://localhost:${PORT}`);
     logger.info(`GraphQL endpoint at http://localhost:${PORT}/graphql`);
+    logger.info(`MCP endpoint at http://localhost:${PORT}/mcp`);
   });
 }
 

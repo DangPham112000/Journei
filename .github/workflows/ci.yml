@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Same approach as the Dockerfiles, so CI and the production build use the same pnpm.
+      - name: Set up pnpm
+        run: corepack enable && corepack prepare pnpm@latest --activate
+
+      - name: Get pnpm store path
+        id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint frontend
+        run: pnpm --filter frontend lint
+
+      - name: Check generated GraphQL types are up to date
+        run: |
+          pnpm generate
+          if ! git diff --exit-code -- '*/src/__generated__/*'; then
+            echo "::error::Generated GraphQL files are out of date. Run 'pnpm generate' and commit the result."
+            exit 1
+          fi
+
+      - name: Build backend
+        run: pnpm build:backend
+
+      - name: Build frontend
+        run: pnpm build:frontend

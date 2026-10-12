@@ -13,15 +13,14 @@ A web application to plan your journeys. This app allows you to choose dates for
 - Base UI
 - Apollo Client
 - Google Maps React (`@vis.gl/react-google-maps`)
-- React OAuth Google (`@react-oauth/google`)
+- Clerk (`@clerk/react`)
 
 **Backend:**
 - Express.js
 - GraphQL (Apollo Server)
 - TypeScript
 - MongoDB (via Mongoose)
-- Google Auth Library
-- JWT & Cookie Parser
+- Clerk (`@clerk/backend`)
 
 ## Architecture
 
@@ -57,7 +56,7 @@ flowchart TD
     Mongo --- MongoVol
 
     Frontend -.->|Client-side Map Data| GoogleAPIs
-    Backend -.->|Server-side OAuth/Calendar| GoogleAPIs
+    Backend -.->|Server-side Calendar| GoogleAPIs
 ```
 
 ## Project Structure
@@ -90,27 +89,18 @@ This key is used by the frontend to render the interactive map and handle locati
 
 *(Note: It is highly recommended to restrict this API key to your specific domain or IP address in the Google Cloud Console to prevent unauthorized usage).*
 
-#### 2. Obtaining OAuth Credentials
-These credentials are used to authenticate users via Google OAuth and request access to their Google Calendar. The frontend needs the Client ID to initiate the login, and the backend needs both the Client ID and Client Secret to verify tokens securely.
+#### 2. Setting up Clerk (Sign-in)
+Sign-in uses [Clerk](https://clerk.com). Outside Mock Mode you need a Clerk application:
 
-1. In the same Google Cloud Project, go to **APIs & Services > Library**.
-2. Search for and enable the **Google Calendar API**.
-3. Go to **APIs & Services > OAuth consent screen**.
-   - Choose "External" (or "Internal" if using Google Workspace).
-   - Fill in the required App information (App name, support email, developer contact).
-   - Under Scopes, add `.../auth/calendar.events` and `.../auth/userinfo.profile` (or similar required scopes).
-   - Add your test users if your app is in "Testing" status.
-4. Go to **APIs & Services > Credentials**.
-5. Click **Create Credentials** and select **OAuth client ID**.
-6. Choose **Web application** as the Application type.
-7. Add your application's URIs:
-   - **Authorized JavaScript origins**: e.g., `http://localhost:5173` (for local dev) or `https://journei.yourdomain.com` (for production).
-   - **Authorized redirect URIs**: Typically the same as your origin, or wherever your auth callback handles the response.
-8. Click **Create**. You will receive a **Client ID** and a **Client Secret**.
-9. Configure the environment variables:
-   - Add the Client ID to `frontend/.env` as `VITE_GOOGLE_CLIENT_ID`.
-   - Add the Client ID to `backend/.env` as `GOOGLE_CLIENT_ID`.
-   - Add the Client Secret to `backend/.env` as `GOOGLE_CLIENT_SECRET`.
+1. Create an application in the [Clerk dashboard](https://dashboard.clerk.com) and enable **Google** (and any other sign-in methods you want) under *User & authentication*.
+2. From **API keys**, copy the publishable key and the secret key.
+3. Configure the environment variables:
+   - Add the publishable key to `frontend/.env` as `VITE_CLERK_PUBLISHABLE_KEY`.
+   - Add the secret key to `backend/.env` as `CLERK_SECRET_KEY`.
+   - Optionally set `CLERK_AUTHORIZED_PARTIES` in `backend/.env` (comma-separated origins, e.g. `http://localhost:5173`) to only accept session tokens issued for those origins.
+4. For production, add your domain to the Clerk instance.
+
+The frontend sends the Clerk session token as `Authorization: Bearer …` and the backend verifies it. On first sign-in, a Clerk user is linked to the existing user with the same email (so accounts from the old Google login keep their plans), or a new user is created.
 
 ### Local Development
 
@@ -126,7 +116,7 @@ We use [pnpm Workspaces](https://pnpm.io/workspaces) to manage dependencies.
 **Mock Mode Details:**
 By default, `pnpm start` spins up the application in a sandboxed **Mock Mode**. You do not need any environment variables or external API keys to start working!
 - **Database:** An in-memory MongoDB instance is automatically created and seeded with a mock user and events.
-- **Authentication:** Google OAuth is bypassed via a local mock endpoint.
+- **Authentication:** Clerk is bypassed: the frontend stubs `@clerk/react` via a Vite alias and the backend treats every request as the seeded mock user.
 - **Maps:** Google Maps integration is mocked seamlessly via Vite aliases.
 
 ### Production Deployment

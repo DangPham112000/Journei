@@ -69,6 +69,16 @@ jobs:
         with:
           ref: ${{ steps.determine-ref.outputs.target_ref }}
 
+      # Without the key the frontend builds but crashes on load, since Clerk needs it.
+      - name: Check Clerk publishable key
+        env:
+          KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "::error::Set the VITE_CLERK_PUBLISHABLE_KEY repository secret (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -89,7 +99,7 @@ jobs:
           push: true
           tags: ${{ env.FRONTEND_IMAGE_LOWER }}:latest
           build-args: |
-            VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+            VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
             VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
 
       - name: Build and push Backend Docker image

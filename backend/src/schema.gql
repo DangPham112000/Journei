@@ -1,6 +1,6 @@
 type User {
   id: ID!
-  googleId: String!
+  googleId: String
   email: String!
   name: String!
   picture: String
@@ -75,8 +75,6 @@ type Query {
 }
 
 type Mutation {
-  loginWithGoogle(code: String!): User!
-
   createCategory(name: String!): Category!
   createDestination(name: String!): Destination!
 

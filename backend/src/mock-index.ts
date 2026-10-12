@@ -12,57 +12,7 @@ async function startMockLayer() {
   const mongoServer = await MongoMemoryServer.create();
   process.env.MONGODB_URI = mongoServer.getUri();
 
-  // Set fake tokens
-  process.env.GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'fake-client-id';
-  process.env.GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'fake-client-secret';
-
-  // We need to wait for mongoose to actually connect before seeding the database.
-  // The easiest way is to let index.ts start the server, then we run seedMockData.
-  // But wait, seedMockData is async, so we'll do it later or let index.ts start the connection.
-
-  // Actually, we can just intercept Google API requests using Nock
-  nock('https://oauth2.googleapis.com')
-    .persist()
-    .post('/token')
-    .reply(200, {
-      id_token: 'fake-mock-id-token',
-      refresh_token: 'fake-mock-refresh-token',
-      access_token: 'fake-access-token',
-      expires_in: 3600,
-      token_type: 'Bearer',
-    });
-
-  nock('https://oauth2.googleapis.com')
-    .persist()
-    .get('/tokeninfo')
-    .query(true) // any query params
-    .reply(200, {
-      sub: 'mock-google-id-12345',
-      email: 'mockuser@example.com',
-      name: 'Mock User',
-      picture: 'https://via.placeholder.com/150',
-    });
-
-  // Since google-auth-library verifies certificates cryptographically, we can't easily mock `/certs`.
-  // The easiest way to mock `verifyIdToken` is to intercept the method on OAuth2Client prototype.
-  const { OAuth2Client } = require('google-auth-library');
-  OAuth2Client.prototype.verifyIdToken = async function() {
-    return {
-      getPayload: () => ({
-        sub: 'mock-google-id-12345',
-        email: 'mockuser@example.com',
-        name: 'Mock User',
-        picture: 'https://via.placeholder.com/150',
-      })
-    };
-  };
-
-  nock('https://www.googleapis.com')
-    .persist()
-    .get('/oauth2/v1/certs')
-    .reply(200, {
-      "mock-key-id": "mock-certificate"
-    });
+  // Mock Mode has no Clerk: index.ts treats every request as the seeded mock user.
 
   // Mock Calendar API calls if they happen
   nock('https://www.googleapis.com')
@@ -84,7 +34,7 @@ async function startMockLayer() {
       summary: 'Mock Created Event',
     });
 
-  console.log('Google API mocks applied.');
+  console.log('Google Calendar API mocks applied.');
 
   // Import original index to start the app natively
   // Since index.ts contains an async IIFE, it will run immediately and use our MONGODB_URI and Nock overrides.

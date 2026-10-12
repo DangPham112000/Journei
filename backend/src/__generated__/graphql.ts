@@ -58,7 +58,6 @@ export type Mutation = {
   deletePlace: Scalars['Boolean']['output'];
   deletePlan: Scalars['Boolean']['output'];
   deleteScheduledActivity: Scalars['Boolean']['output'];
-  loginWithGoogle: User;
   updatePlace: Place;
   updatePlan: Plan;
   updateScheduledActivity: ScheduledActivity;
@@ -119,11 +118,6 @@ export type MutationDeletePlanArgs = {
 
 export type MutationDeleteScheduledActivityArgs = {
   id: Scalars['ID']['input'];
-};
-
-
-export type MutationLoginWithGoogleArgs = {
-  code: Scalars['String']['input'];
 };
 
 
@@ -222,7 +216,7 @@ export type ScheduledActivity = {
 export type User = {
   __typename?: 'User';
   email: Scalars['String']['output'];
-  googleId: Scalars['String']['output'];
+  googleId?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   picture?: Maybe<Scalars['String']['output']>;
@@ -370,7 +364,6 @@ export type MutationResolvers<ContextType = any, ParentType extends ResolversPar
   deletePlace?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeletePlaceArgs, 'id'>>;
   deletePlan?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeletePlanArgs, 'id'>>;
   deleteScheduledActivity?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType, RequireFields<MutationDeleteScheduledActivityArgs, 'id'>>;
-  loginWithGoogle?: Resolver<ResolversTypes['User'], ParentType, ContextType, RequireFields<MutationLoginWithGoogleArgs, 'code'>>;
   updatePlace?: Resolver<ResolversTypes['Place'], ParentType, ContextType, RequireFields<MutationUpdatePlaceArgs, 'id'>>;
   updatePlan?: Resolver<ResolversTypes['Plan'], ParentType, ContextType, RequireFields<MutationUpdatePlanArgs, 'id'>>;
   updateScheduledActivity?: Resolver<ResolversTypes['ScheduledActivity'], ParentType, ContextType, RequireFields<MutationUpdateScheduledActivityArgs, 'id'>>;
@@ -419,7 +412,7 @@ export type ScheduledActivityResolvers<ContextType = any, ParentType extends Res
 
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
   email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  googleId?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
+  googleId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   picture?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
@@ -437,3 +430,4 @@ export type Resolvers<ContextType = any> = {
   ScheduledActivity?: ScheduledActivityResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
 };
+

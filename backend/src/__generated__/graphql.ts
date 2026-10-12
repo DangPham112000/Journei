@@ -437,3 +437,4 @@ export type Resolvers<ContextType = any> = {
   ScheduledActivity?: ScheduledActivityResolvers<ContextType>;
   User?: UserResolvers<ContextType>;
 };
+

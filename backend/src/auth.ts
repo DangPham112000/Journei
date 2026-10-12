@@ -1,4 +1,5 @@
 import { createClerkClient, verifyToken } from '@clerk/backend';
+import { verifyMachineAuthToken } from '@clerk/backend/internal';
 import { User } from './models/User';
 import { logger } from './utils/logger';
 
@@ -52,6 +53,26 @@ export async function getUserFromAuthHeader(header: string | undefined): Promise
   }
 
   return getUserByClerkId(clerkId);
+}
+
+/**
+ * Resolve the signed-in user from a Clerk OAuth access token (the kind an MCP client such as
+ * Claude obtains after the user approves access). Returns null when the header is missing or the
+ * token is invalid, expired or revoked.
+ */
+export async function getUserFromOAuthHeader(header: string | undefined): Promise<AuthUser | null> {
+  const secretKey = process.env.CLERK_SECRET_KEY;
+  if (!secretKey || !header?.startsWith('Bearer ')) return null;
+  const token = header.slice('Bearer '.length).trim();
+
+  try {
+    const { data, errors } = await verifyMachineAuthToken(token, { secretKey });
+    if (errors || !data || !('subject' in data) || data.revoked || data.expired) return null;
+    return getUserByClerkId(data.subject);
+  } catch (error) {
+    logger.warn({ err: error }, 'Invalid Clerk OAuth access token');
+    return null;
+  }
 }
 
 /**

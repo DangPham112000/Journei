@@ -40,6 +40,8 @@ services:
     environment:
       - MONGODB_URI=mongodb://mongodb:27017/journey-planner
       - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+      # Used to find Clerk's OAuth authorization server for the MCP endpoint.
+      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
       # Origins allowed to use a Clerk session token (comma-separated).
       - CLERK_AUTHORIZED_PARTIES=https://${DOMAIN}
       - GEMINI_API_KEY=${GEMINI_API_KEY}

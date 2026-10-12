@@ -16,12 +16,6 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
-export type AssistantResponse = {
-  __typename?: 'AssistantResponse';
-  draftEvent?: Maybe<DraftEvent>;
-  text: Scalars['String']['output'];
-};
-
 export type Category = {
   __typename?: 'Category';
   id: Scalars['ID']['output'];
@@ -34,27 +28,8 @@ export type Destination = {
   name: Scalars['String']['output'];
 };
 
-export type DraftEvent = {
-  __typename?: 'DraftEvent';
-  description?: Maybe<Scalars['String']['output']>;
-  endDate: Scalars['String']['output'];
-  location?: Maybe<Scalars['String']['output']>;
-  startDate: Scalars['String']['output'];
-  title: Scalars['String']['output'];
-};
-
-export type MessageInput = {
-  parts: Array<MessagePartInput>;
-  role: Scalars['String']['input'];
-};
-
-export type MessagePartInput = {
-  text: Scalars['String']['input'];
-};
-
 export type Mutation = {
   __typename?: 'Mutation';
-  askAssistant: AssistantResponse;
   createCategory: Category;
   createDestination: Destination;
   createPlace: Place;
@@ -66,12 +41,6 @@ export type Mutation = {
   updatePlace: Place;
   updatePlan: Plan;
   updateScheduledActivity: ScheduledActivity;
-};
-
-
-export type MutationAskAssistantArgs = {
-  history?: InputMaybe<Array<MessageInput>>;
-  message: Scalars['String']['input'];
 };
 
 

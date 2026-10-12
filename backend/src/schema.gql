@@ -45,19 +45,6 @@ type ScheduledActivity {
   endTime: String!
 }
 
-type DraftEvent {
-  title: String!
-  description: String
-  startDate: String!
-  endDate: String!
-  location: String
-}
-
-type AssistantResponse {
-  text: String!
-  draftEvent: DraftEvent
-}
-
 type Query {
   hello: String!
   me: User
@@ -131,15 +118,4 @@ type Mutation {
   ): ScheduledActivity!
 
   deleteScheduledActivity(id: ID!): Boolean!
-
-  askAssistant(message: String!, history: [MessageInput!]): AssistantResponse!
-}
-
-input MessageInput {
-  role: String!
-  parts: [MessagePartInput!]!
-}
-
-input MessagePartInput {
-  text: String!
 }

@@ -37,7 +37,7 @@ Application code contains no mock branches outside the `index.ts` context functi
 
 ## Environment variables
 
-- `backend/.env`: `MONGODB_URI`, `CLERK_SECRET_KEY`, `CLERK_AUTHORIZED_PARTIES` (optional, comma-separated origins allowed to use a session token), `FRONTEND_URL` (CORS origin, defaults to `http://localhost:5173`), `CLERK_PUBLISHABLE_KEY` (MCP OAuth discovery), `GEMINI_API_KEY`, `PORT`, `LOG_LEVEL`.
+- `backend/.env`: `MONGODB_URI`, `CLERK_SECRET_KEY`, `CLERK_AUTHORIZED_PARTIES` (optional, comma-separated origins allowed to use a session token), `FRONTEND_URL` (CORS origin, defaults to `http://localhost:5173`), `CLERK_PUBLISHABLE_KEY` (MCP OAuth discovery), `PORT`, `LOG_LEVEL`.
 - `frontend/.env`: `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_GOOGLE_MAPS_API_KEY`. In production these are baked into the image as Docker build args from GitHub Secrets.
 
 ## GraphQL workflow
@@ -59,7 +59,6 @@ To change the API: edit `schema.gql`, update `backend/src/graphql/resolvers.ts`,
 - **MCP server** (`src/mcp/`): Streamable HTTP endpoint at `POST /mcp`, stateless (a fresh `McpServer` per request). Auth is a Clerk **OAuth access token** (`getUserFromOAuthHeader` in `auth.ts`), not a session token; a 401 carries `WWW-Authenticate` pointing at `/.well-known/oauth-protected-resource`, which names Clerk's Frontend API (derived from `CLERK_PUBLISHABLE_KEY`) as the authorization server. Tools in `src/mcp/tools.ts` call the GraphQL resolvers so the plan-ownership checks stay in one place; delete operations are deliberately not exposed. Mock Mode treats every `/mcp` request as the mock user.
 - `Category` and `Destination` are global, shared across users, and `create*` for them is get-or-create by unique name. `recommendedPlaces` intentionally returns places from all users for a destination.
 - **Field naming mismatch**: Mongoose stores references as `destinationId` / `categoryId` / `placeId`, while the GraphQL types expose `destination` / `category` / `place`. Queries must `.populate()` those paths and the type-level resolvers (`Place.destination`, `ScheduledActivity.place`, ...) map the populated field across. Dates are stored as `Date` and exposed as `String`.
-- `src/utils/ai.ts` implements the `askAssistant` mutation using Gemini function calling (`getUserProfile`, `getUserPlans`, `draftPlan`). `draftPlan` does not write anything; it returns a `draftEvent` for the client to confirm.
 - Logging uses pino (`src/utils/logger.ts`, pretty-printed outside production) plus an Apollo plugin in `src/utils/graphqlLogger.ts`.
 
 ## Frontend architecture
@@ -72,7 +71,6 @@ To change the API: edit `schema.gql`, update `backend/src/graphql/resolvers.ts`,
 
 ### Unfinished / legacy areas
 
-- `src/pages/Assistant/index.tsx` is not routed, uses inline `gql`, and calls a `createEvent` mutation that does not exist in the schema. The backend `askAssistant` mutation works, but this page needs rework before it can be wired up.
 - `/app` (`App.tsx` with `JourneyPlanner`, `LocationInput`, `Map`) is the original prototype screen with TODO placeholders for map pins. It is routed but not linked from the nav.
 - Google Calendar integration is not implemented: `Plan.googleEventId` and `User.refreshToken` (left over from the old Google login) are unused, and `index.ts` only has a TODO for it. With Clerk, a Google access token can be fetched with `clerk.users.getUserOauthAccessToken`.
 

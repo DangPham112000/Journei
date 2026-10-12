@@ -4,7 +4,6 @@ import { Destination } from '../models/Destination';
 import { Plan } from '../models/Plan';
 import { Place } from '../models/Place';
 import { ScheduledActivity } from '../models/ScheduledActivity';
-import { processAssistantMessage } from '../utils/ai';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -262,14 +261,5 @@ export const resolvers = {
       await ScheduledActivity.findByIdAndDelete(id);
       return true;
     }),
-
-    askAssistant: requireAuth(async (_: any, { message, history }: { message: string, history?: any[] }, context: any) => {
-      try {
-        const response = await processAssistantMessage(context.user.id, message, history);
-        return response;
-      } catch (error: any) {
-        throw new Error(error.message || 'Failed to process assistant message');
-      }
-    })
   },
 };

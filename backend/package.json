@@ -13,7 +13,6 @@
   "dependencies": {
     "@apollo/server": "^4.10.0",
     "@clerk/backend": "^3.23.2",
-    "@google/generative-ai": "^0.24.1",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

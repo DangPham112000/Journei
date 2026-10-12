@@ -44,7 +44,6 @@ services:
       - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
       # Origins allowed to use a Clerk session token (comma-separated).
       - CLERK_AUTHORIZED_PARTIES=https://${DOMAIN}
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
       - NODE_ENV=production
       - FRONTEND_URL=https://${DOMAIN}
     depends_on:

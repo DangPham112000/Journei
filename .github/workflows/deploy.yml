@@ -69,15 +69,30 @@ jobs:
         with:
           ref: ${{ steps.determine-ref.outputs.target_ref }}
 
-      # Without the key the frontend builds but crashes on load, since Clerk needs it.
-      - name: Check Clerk publishable key
+      # Build-time keys live in Doppler (project journei, config prd). `doppler secrets get`
+      # fails the job if the token or the Clerk key is missing, so a build without sign-in
+      # never ships.
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      - name: Load build-time keys from Doppler
         env:
-          KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
         run: |
-          if [ -z "$KEY" ]; then
-            echo "::error::Set the VITE_CLERK_PUBLISHABLE_KEY repository secret (Settings → Secrets and variables → Actions)."
+          if [ -z "$DOPPLER_TOKEN" ]; then
+            echo "::error::Set the DOPPLER_TOKEN repository secret (a read-only service token for journei/prd)."
             exit 1
           fi
+          CLERK_KEY=$(doppler secrets get VITE_CLERK_PUBLISHABLE_KEY --plain)
+          echo "VITE_CLERK_PUBLISHABLE_KEY=$CLERK_KEY" >> "$GITHUB_ENV"
+          # The map is optional: build without it rather than failing.
+          MAPS_KEY=$(doppler secrets get VITE_GOOGLE_MAPS_API_KEY --plain 2>/dev/null || true)
+          if [ -z "$MAPS_KEY" ]; then
+            echo "::warning::VITE_GOOGLE_MAPS_API_KEY is not set in Doppler; maps will not load."
+          else
+            echo "::add-mask::$MAPS_KEY"
+          fi
+          echo "VITE_GOOGLE_MAPS_API_KEY=$MAPS_KEY" >> "$GITHUB_ENV"
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -99,8 +114,8 @@ jobs:
           push: true
           tags: ${{ env.FRONTEND_IMAGE_LOWER }}:latest
           build-args: |
-            VITE_CLERK_PUBLISHABLE_KEY=${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-            VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
+            VITE_CLERK_PUBLISHABLE_KEY=${{ env.VITE_CLERK_PUBLISHABLE_KEY }}
+            VITE_GOOGLE_MAPS_API_KEY=${{ env.VITE_GOOGLE_MAPS_API_KEY }}
 
       - name: Build and push Backend Docker image
         uses: docker/build-push-action@v5
@@ -147,6 +162,14 @@ jobs:
             # Login to GHCR (using a Personal Access Token stored as a secret, NOT GITHUB_TOKEN which is temporary)
             echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+            # Runtime secrets come from Doppler. The VPS user has a read-only service token
+            # scoped to /opt/journei (doppler configure set token --scope /opt/journei).
+            # Stop here if it is missing, rather than starting a backend without Clerk keys.
+            if ! doppler secrets get CLERK_SECRET_KEY --plain > /dev/null; then
+              echo "Doppler is not set up for /opt/journei on this VPS user." >&2
+              exit 1
+            fi
+
             # Clean up dangling images before pulling new ones to free up space
             docker image prune -f
 
@@ -155,16 +178,17 @@ jobs:
             docker pull ghcr.io/$GITHUB_REPOSITORY_LOWER/journei-backend:latest
 
             # Update Nginx config with DOMAIN
-            DOMAIN_VALUE=$(grep '^DOMAIN=' .env | cut -d '=' -f2)
+            DOMAIN_VALUE=$(doppler secrets get DOMAIN --plain)
             sed -i "s/server_name _;/server_name ${DOMAIN_VALUE};/g" nginx/nginx.conf
 
-            # Restart the services
+            # Restart the services with the secrets from Doppler in the environment, where
+            # docker compose fills in ${CLERK_SECRET_KEY}, ${DOMAIN} and the rest.
             # We first recreate the frontend and backend containers so they get their new IPs
-            docker compose up -d
+            doppler run -- docker compose up -d --remove-orphans
 
             # Force recreating nginx-proxy to pick up the new configuration file inode
             # and to freshly resolve the new DNS IPs of the upstream containers
-            docker compose up -d --force-recreate nginx-proxy
+            doppler run -- docker compose up -d --force-recreate nginx-proxy
 
             # Clean up old unused images to prevent running out of disk space in future deployments
             docker image prune -a -f

@@ -83,7 +83,9 @@ jobs:
             echo "::error::Set the DOPPLER_TOKEN repository secret (a read-only service token for journei/prd)."
             exit 1
           fi
-          CLERK_KEY=$(doppler secrets get VITE_CLERK_PUBLISHABLE_KEY --plain)
+          # The backend uses the same publishable key, so Doppler keeps one variable and
+          # the frontend build gets it under its VITE_ name.
+          CLERK_KEY=$(doppler secrets get CLERK_PUBLISHABLE_KEY --plain)
           echo "VITE_CLERK_PUBLISHABLE_KEY=$CLERK_KEY" >> "$GITHUB_ENV"
           # The map is optional: build without it rather than failing.
           MAPS_KEY=$(doppler secrets get VITE_GOOGLE_MAPS_API_KEY --plain 2>/dev/null || true)

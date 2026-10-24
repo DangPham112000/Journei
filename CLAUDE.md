@@ -38,7 +38,7 @@ Application code contains no mock branches outside the `index.ts` context functi
 ## Environment variables
 
 - `backend/.env`: `MONGODB_URI`, `CLERK_SECRET_KEY`, `CLERK_AUTHORIZED_PARTIES` (optional, comma-separated origins allowed to use a session token), `FRONTEND_URL` (CORS origin, defaults to `http://localhost:5173`), `CLERK_PUBLISHABLE_KEY` (MCP OAuth discovery), `PORT`, `LOG_LEVEL`.
-- `frontend/.env`: `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_GOOGLE_MAPS_API_KEY`. In production these are baked into the image as Docker build args read from Doppler (`journei/prd`) with the `DOPPLER_TOKEN` GitHub secret.
+- `frontend/.env`: `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_GOOGLE_MAPS_API_KEY`. In production these are baked into the image as Docker build args read from Doppler (`journei/prd`) with the `DOPPLER_TOKEN` GitHub secret; the Clerk key comes from Doppler's `CLERK_PUBLISHABLE_KEY` (shared with the backend).
 
 ## GraphQL workflow
 

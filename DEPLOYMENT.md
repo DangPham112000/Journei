@@ -126,7 +126,6 @@ Before the first deployment, you need to prepare the application directory and e
 3. Secrets come from Doppler, not a `.env` file. In Doppler project `journei`, config `prd`, set:
    - `CLERK_SECRET_KEY` = `${shared.prd.CLERK_SECRET_KEY}`
    - `CLERK_PUBLISHABLE_KEY` = `${shared.prd.CLERK_PUBLISHABLE_KEY}`
-   - `VITE_CLERK_PUBLISHABLE_KEY` = `${shared.prd.CLERK_PUBLISHABLE_KEY}` (Doppler does not allow chained references, so point it at `shared` directly)
    - `VITE_GOOGLE_MAPS_API_KEY` = your Google Maps API key (optional; maps do not load without it)
    - `DOMAIN` = `journei.yourdomain.com`
 4. Create a read-only service token on `journei/prd` for the VPS and scope it to the app directory (the deploy runs `doppler run -- docker compose up -d` there):
@@ -178,7 +177,7 @@ Add the following secrets:
 - **Name:** `GHCR_PAT`
   - **Secret:** Paste the Personal Access Token you generated in step 4.1. (The workflow uses this to log into the GitHub Container Registry to upload the Docker images).
 - **Name:** `DOPPLER_TOKEN`
-  - **Secret:** A second read-only Doppler service token on `journei/prd`. The build reads `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_GOOGLE_MAPS_API_KEY` from Doppler with it and fails if the Clerk key is missing.
+  - **Secret:** A second read-only Doppler service token on `journei/prd`. The build reads `CLERK_PUBLISHABLE_KEY` (passed to the frontend as `VITE_CLERK_PUBLISHABLE_KEY`) and `VITE_GOOGLE_MAPS_API_KEY` from Doppler with it and fails if the Clerk key is missing.
 
 ---
 

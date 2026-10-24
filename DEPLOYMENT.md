@@ -120,8 +120,8 @@ Before the first deployment, you need to prepare the application directory and e
 1. SSH into your VPS.
 2. Create the application directory:
    ```bash
-   mkdir -p ~/journei/nginx
-   cd ~/journei
+   mkdir -p /opt/journei/nginx
+   cd /opt/journei
    ```
 3. Create the `.env` file for Docker Compose:
    ```bash

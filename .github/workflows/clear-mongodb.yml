@@ -27,7 +27,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             echo "Navigating to project directory..."
-            cd ~/journei || exit 1
+            cd /opt/journei || exit 1
 
             echo "Stopping MongoDB container..."
             docker compose stop mongodb
@@ -36,8 +36,8 @@ jobs:
             docker compose rm -f mongodb
 
             echo "Removing MongoDB volume..."
-            # The volume name is usually prefixed with the project directory name.
-            # Assuming the directory is 'journei', the volume is 'journei_mongodb_data'
+            # The volume name is prefixed with the compose project name.
+            # docker-compose.yml sets the project name to "journei", so the volume is "journei_mongodb_data"
             docker volume rm journei_mongodb_data || echo "Volume might already be deleted or not found."
 
             echo "Starting MongoDB container fresh..."

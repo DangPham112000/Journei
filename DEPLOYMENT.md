@@ -123,18 +123,17 @@ Before the first deployment, you need to prepare the application directory and e
    mkdir -p /opt/journei/nginx
    cd /opt/journei
    ```
-3. Create the `.env` file for Docker Compose:
+3. Secrets come from Doppler, not a `.env` file. In Doppler project `journei`, config `prd`, set:
+   - `CLERK_SECRET_KEY` = `${shared.prd.CLERK_SECRET_KEY}`
+   - `CLERK_PUBLISHABLE_KEY` = `${shared.prd.CLERK_PUBLISHABLE_KEY}`
+   - `VITE_GOOGLE_MAPS_API_KEY` = your Google Maps API key (optional; maps do not load without it)
+   - `DOMAIN` = `journei.yourdomain.com`
+4. Create a read-only service token on `journei/prd` for the VPS and scope it to the app directory (the deploy runs `doppler run -- docker compose up -d` there):
    ```bash
-   vim .env
+   export HISTIGNORE='doppler*'
+   doppler configure set token <service token> --scope /opt/journei
+   cd /opt/journei && doppler secrets get DOMAIN --plain   # check
    ```
-4. Paste the following configuration, filling in your specific details (press `i` to enter insert mode):
-   ```env
-   # Backend Variables
-   CLERK_SECRET_KEY=sk_live_your_clerk_secret_key
-   CLERK_PUBLISHABLE_KEY=pk_live_your_clerk_publishable_key
-   DOMAIN=journei.yourdomain.com
-   ```
-5. Save and exit (press `Esc`, type `:wq`, and press `Enter`).
 
 ---
 
@@ -165,7 +164,7 @@ A Personal Access Token (PAT) acts as a secure password or an API key. Our autom
 Now that you have your PAT and your SSH keys from Step 1, you need to store them securely inside your specific repository.
 
 1. **Navigate to Repository Secrets:** Go to your project's main repository page on GitHub. Click the **Settings** tab near the top. On the left sidebar, expand **Secrets and variables** and click on **Actions**.
-2. **Add new secrets:** Click the green **New repository secret** button. You will repeat this process four times to create four different secrets. The "Name" must match exactly what is written below, as the workflow specifically looks for these names.
+2. **Add new secrets:** Click the green **New repository secret** button. Repeat this for each secret below. The "Name" must match exactly what is written below, as the workflow specifically looks for these names.
 
 Add the following secrets:
 
@@ -177,12 +176,8 @@ Add the following secrets:
   - **Secret:** Paste the entire contents of the **private** SSH key (`github-actions-key`) you generated in Step 1. (This acts as the highly secure password that proves the automated workflow has the right to log into your server as the `VPS_USERNAME`).
 - **Name:** `GHCR_PAT`
   - **Secret:** Paste the Personal Access Token you generated in step 4.1. (The workflow uses this to log into the GitHub Container Registry to upload the Docker images).
-- **Name:** `VITE_CLERK_PUBLISHABLE_KEY`
-  - **Secret:** Paste your Clerk publishable key (`pk_live_...`) here. This is required to build the frontend application correctly; the workflow fails without it.
-- **Name:** `VITE_GOOGLE_MAPS_API_KEY`
-  - **Secret:** Paste your Google Maps API Key here. This is required to build the frontend application correctly.
-
-*Note: Since `VITE_CLERK_PUBLISHABLE_KEY` and `VITE_GOOGLE_MAPS_API_KEY` are built directly into the frontend image using GitHub Secrets, you no longer need them in the `.env` file on your VPS.*
+- **Name:** `DOPPLER_TOKEN`
+  - **Secret:** A second read-only Doppler service token on `journei/prd`. The build reads `CLERK_PUBLISHABLE_KEY` (passed to the frontend as `VITE_CLERK_PUBLISHABLE_KEY`) and `VITE_GOOGLE_MAPS_API_KEY` from Doppler with it and fails if the Clerk key is missing.
 
 ---
 

@@ -38,7 +38,7 @@ Application code contains no mock branches outside the `index.ts` context functi
 ## Environment variables
 
 - `backend/.env`: `MONGODB_URI`, `CLERK_SECRET_KEY`, `CLERK_AUTHORIZED_PARTIES` (optional, comma-separated origins allowed to use a session token), `FRONTEND_URL` (CORS origin, defaults to `http://localhost:5173`), `CLERK_PUBLISHABLE_KEY` (MCP OAuth discovery), `PORT`, `LOG_LEVEL`.
-- `frontend/.env`: `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_GOOGLE_MAPS_API_KEY`. In production these are baked into the image as Docker build args from GitHub Secrets.
+- `frontend/.env`: `VITE_CLERK_PUBLISHABLE_KEY`, `VITE_GOOGLE_MAPS_API_KEY`. In production these are baked into the image as Docker build args read from Doppler (`journei/prd`) with the `DOPPLER_TOKEN` GitHub secret; the Clerk key comes from Doppler's `CLERK_PUBLISHABLE_KEY` (shared with the backend).
 
 ## GraphQL workflow
 
@@ -80,7 +80,7 @@ Pushing to `main` triggers `.github/workflows/deploy.yml`, which **deploys to pr
 
 - Production topology: `nginx-proxy` routes `/graphql` to `backend:4000` and everything else to the `frontend` container (its own nginx with SPA fallback in `frontend/nginx.conf`), with MongoDB on the internal Docker network. Cloudflare terminates TLS.
 - The `Cross-Origin-Opener-Policy: same-origin-allow-popups` header (originally for the Google login popup, kept for Clerk's OAuth popups) is set in three places that must stay in sync: `frontend/vite.config.ts`, `frontend/nginx.conf`, and `nginx/nginx.conf`.
-- New backend env vars must be added to the `environment:` list in `docker-compose.yml` as well as the VPS `.env`, or the container will not receive them.
+- New backend env vars must be added to the `environment:` list in `docker-compose.yml` as well as Doppler `journei/prd`, or the container will not receive them. The VPS has no `.env`: the deploy runs `doppler run -- docker compose up -d` in `/opt/journei`. Clerk keys reference the shared ecosystem Clerk app (`${shared.prd.CLERK_*}`).
 - `.github/workflows/clear-mongodb.yml` is a manual workflow that wipes the production database volume.
 
 ## Code style

@@ -78,10 +78,10 @@ To change the API: edit `schema.gql`, update `backend/src/graphql/resolvers.ts`,
 
 Pushing to `main` triggers `.github/workflows/deploy.yml`, which **deploys to production**: it builds both Docker images (build context is the repo root so the pnpm workspace resolves), pushes them to GHCR, copies `docker-compose.yml` and `nginx/` to the VPS, and restarts the stack. `DEPLOYMENT.md` has the full setup guide.
 
-- Production topology: `nginx-proxy` routes `/graphql` to `backend:4000` and everything else to the `frontend` container (its own nginx with SPA fallback in `frontend/nginx.conf`), with MongoDB on the internal Docker network. Cloudflare terminates TLS.
+- Production topology: `nginx-proxy` routes `/graphql` to `backend:4000` and everything else to the `frontend` container (its own nginx with SPA fallback in `frontend/nginx.conf`), with MongoDB on the ecosystem's shared instance (`ecosystem-mongo` from the `ecosystem-infra` repo, DAN-90): the backend joins the external `ecosystem` network and logs in as the `journei` Mongo user with `MONGO_PASSWORD` from Doppler, which can only write the `journey-planner` database. Deploy that stack first. Cloudflare terminates TLS.
 - The `Cross-Origin-Opener-Policy: same-origin-allow-popups` header (originally for the Google login popup, kept for Clerk's OAuth popups) is set in three places that must stay in sync: `frontend/vite.config.ts`, `frontend/nginx.conf`, and `nginx/nginx.conf`.
 - New backend env vars must be added to the `environment:` list in `docker-compose.yml` as well as Doppler `journei/prd`, or the container will not receive them. The VPS has no `.env`: the deploy runs `doppler run -- docker compose up -d` in `/opt/journei`. Clerk keys reference the shared ecosystem Clerk app (`${shared.prd.CLERK_*}`).
-- `.github/workflows/clear-mongodb.yml` is a manual workflow that wipes the production database volume.
+- `.github/workflows/clear-mongodb.yml` is a manual workflow that drops every collection in the production `journey-planner` database.
 
 ## Code style
 

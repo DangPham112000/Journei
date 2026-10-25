@@ -41,8 +41,9 @@ flowchart TD
             NginxProxy[Nginx Proxy Container]
             Frontend[Frontend Container<br>React]
             Backend[Backend Container<br>Node.js/GraphQL]
-            Mongo[(MongoDB Container)]
-            MongoVol[[Docker Volume: mongodb_data]]
+        end
+        subgraph Shared ecosystem network
+            Mongo[(ecosystem-mongo<br>shared MongoDB, database journey-planner)]
         end
     end
 
@@ -52,8 +53,7 @@ flowchart TD
     NginxProxy -->|Root Requests /| Frontend
     NginxProxy -->|API Requests /graphql| Backend
 
-    Backend <-->|Mongoose| Mongo
-    Mongo --- MongoVol
+    Backend <-->|Mongoose, user journei| Mongo
 
     Frontend -.->|Client-side Map Data| GoogleAPIs
     Backend -.->|Server-side Calendar| GoogleAPIs

@@ -40,28 +40,24 @@ jobs:
             { echo "$name<<__DOPPLER_EOF__"; echo "$value"; echo "__DOPPLER_EOF__"; } >> "$GITHUB_ENV"
           done
 
-      - name: Clear MongoDB Volume on VPS
+      # Journei's data lives in the journey-planner database of the shared ecosystem-mongo
+      # instance (DAN-90). The journei Mongo user can only touch that database, so this
+      # drops every collection in it and leaves the other apps alone.
+      - name: Clear the journey-planner database on VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.VPS_HOST }}
           username: ${{ env.VPS_USERNAME }}
           key: ${{ env.VPS_SSH_KEY }}
           script: |
-            echo "Navigating to project directory..."
-            cd /opt/journei || exit 1
+            set -e
+            cd /opt/journei
 
-            echo "Stopping MongoDB container..."
-            docker compose stop mongodb
+            echo "Dropping every collection in journey-planner..."
+            doppler run -- docker run --rm --network ecosystem -e MONGO_PASSWORD mongo:7 sh -c \
+              'mongosh --quiet "mongodb://journei:$MONGO_PASSWORD@ecosystem-mongo:27017/journey-planner?authSource=admin" --eval "db.getCollectionNames().forEach((c) => { db.getCollection(c).drop(); print(\"dropped \" + c); })"'
 
-            echo "Removing MongoDB container (to release volume)..."
-            docker compose rm -f mongodb
-
-            echo "Removing MongoDB volume..."
-            # The volume name is prefixed with the compose project name.
-            # docker-compose.yml sets the project name to "journei", so the volume is "journei_mongodb_data"
-            docker volume rm journei_mongodb_data || echo "Volume might already be deleted or not found."
-
-            echo "Starting MongoDB container fresh..."
-            docker compose up -d mongodb
+            echo "Restarting the backend so it recreates its indexes..."
+            doppler run -- docker compose restart backend
 
             echo "MongoDB data has been cleared successfully."

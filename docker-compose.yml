@@ -1,5 +1,4 @@
-# Fixed project name so container and volume names (journei_mongodb_data) do not depend on
-# the directory the stack runs from.
+# Fixed project name so container names do not depend on the directory the stack runs from.
 name: journei
 
 services:
@@ -42,7 +41,9 @@ services:
         max-size: "50m"
         max-file: "3"
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/journey-planner
+      # Shared MongoDB (ecosystem-infra, DAN-90): own Mongo user, own database.
+      # MONGO_PASSWORD comes from Doppler journei/prd via `doppler run`.
+      - MONGODB_URI=mongodb://journei:${MONGO_PASSWORD:?MONGO_PASSWORD is not set}@ecosystem-mongo:27017/journey-planner?authSource=admin
       - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
       # Used to find Clerk's OAuth authorization server for the MCP endpoint.
       - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
@@ -50,19 +51,11 @@ services:
       - CLERK_AUTHORIZED_PARTIES=https://${DOMAIN}
       - NODE_ENV=production
       - FRONTEND_URL=https://${DOMAIN}
-    depends_on:
-      - mongodb
+    networks:
+      - default
+      - ecosystem
 
-  mongodb:
-    image: mongo:4.4
-    container_name: journei-mongodb
-    deploy:
-      restart_policy:
-        condition: on-failure
-        max_attempts: 7
-    volumes:
-      - mongodb_data:/data/db
-    # Not exposing port to host for security; backend connects via internal Docker network
-
-volumes:
-  mongodb_data:
+networks:
+  # Created by the shared Mongo stack in ecosystem-infra; deploy that first.
+  ecosystem:
+    external: true

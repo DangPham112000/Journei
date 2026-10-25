@@ -197,6 +197,17 @@ jobs:
               exit 1
             fi
 
+            # The backend uses the shared MongoDB (ecosystem-infra, DAN-90). Stop before changing
+            # anything if that stack or this app's Mongo password is missing.
+            if ! docker network inspect ecosystem > /dev/null 2>&1; then
+              echo "Network 'ecosystem' is missing: deploy the shared Mongo stack (ecosystem-infra) first." >&2
+              exit 1
+            fi
+            if [ -z "$(doppler secrets get MONGO_PASSWORD --plain)" ]; then
+              echo "MONGO_PASSWORD is missing in Doppler journei/prd." >&2
+              exit 1
+            fi
+
             # Clean up dangling images before pulling new ones to free up space
             docker image prune -f
 
@@ -216,6 +227,10 @@ jobs:
             # Force recreating nginx-proxy to pick up the new configuration file inode
             # and to freshly resolve the new DNS IPs of the upstream containers
             doppler run -- docker compose up -d --force-recreate nginx-proxy
+
+            # The stack's own Mongo container was removed as an orphan above. Its data was not
+            # kept (Dang, 2026-10-25), so its volume goes too. No-op once it is gone.
+            docker volume rm journei_mongodb_data 2>/dev/null || true
 
             # Clean up old unused images to prevent running out of disk space in future deployments
             docker image prune -a -f

@@ -45,5 +45,7 @@ WORKDIR /app/backend
 
 EXPOSE 4000
 
-# Start the application
-CMD ["pnpm", "start"]
+# Start the application with node directly. `pnpm start` made newer pnpm releases check the
+# workspace and download packages from npm on every container start (only backend/package.json
+# is in this image), which delayed startup by minutes.
+CMD ["node", "dist/index.js"]

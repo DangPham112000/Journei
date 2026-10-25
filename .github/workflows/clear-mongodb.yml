@@ -19,12 +19,33 @@ jobs:
             exit 1
           fi
 
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      # VPS_HOST, VPS_USERNAME and VPS_SSH_KEY live in Doppler (references to shared/prd, the same
+      # for every app), so GitHub keeps only DOPPLER_TOKEN. They are masked in the logs.
+      - name: Load deploy secrets from Doppler
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: |
+          for name in VPS_HOST VPS_USERNAME VPS_SSH_KEY; do
+            value=$(doppler secrets get "$name" --plain)
+            if [ -z "$value" ]; then
+              echo "::error::$name is empty in Doppler journei/prd."
+              exit 1
+            fi
+            while IFS= read -r line; do
+              if [ -n "$line" ]; then echo "::add-mask::$line"; fi
+            done <<< "$value"
+            { echo "$name<<__DOPPLER_EOF__"; echo "$value"; echo "__DOPPLER_EOF__"; } >> "$GITHUB_ENV"
+          done
+
       - name: Clear MongoDB Volume on VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USERNAME }}
+          key: ${{ env.VPS_SSH_KEY }}
           script: |
             echo "Navigating to project directory..."
             cd /opt/journei || exit 1

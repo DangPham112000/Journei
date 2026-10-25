@@ -130,6 +130,9 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -140,29 +143,51 @@ jobs:
         run: |
           echo "GITHUB_REPOSITORY_LOWER=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
+      - name: Install Doppler CLI
+        uses: dopplerhq/cli-action@v3
+
+      # VPS_HOST, VPS_USERNAME and VPS_SSH_KEY live in Doppler (references to shared/prd, the same
+      # for every app), so GitHub keeps only DOPPLER_TOKEN. They are masked in the logs.
+      - name: Load deploy secrets from Doppler
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+        run: |
+          for name in VPS_HOST VPS_USERNAME VPS_SSH_KEY; do
+            value=$(doppler secrets get "$name" --plain)
+            if [ -z "$value" ]; then
+              echo "::error::$name is empty in Doppler journei/prd."
+              exit 1
+            fi
+            while IFS= read -r line; do
+              if [ -n "$line" ]; then echo "::add-mask::$line"; fi
+            done <<< "$value"
+            { echo "$name<<__DOPPLER_EOF__"; echo "$value"; echo "__DOPPLER_EOF__"; } >> "$GITHUB_ENV"
+          done
+
       - name: Copy configuration files to VPS
         uses: appleboy/scp-action@v0.1.7
         with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USERNAME }}
+          key: ${{ env.VPS_SSH_KEY }}
           source: "docker-compose.yml,nginx/"
           target: "/opt/journei"
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
+          host: ${{ env.VPS_HOST }}
+          username: ${{ env.VPS_USERNAME }}
+          key: ${{ env.VPS_SSH_KEY }}
           envs: GITHUB_REPOSITORY_LOWER
           script: |
             # Ensure the target directory exists
             mkdir -p /opt/journei
             cd /opt/journei
 
-            # Login to GHCR (using a Personal Access Token stored as a secret, NOT GITHUB_TOKEN which is temporary)
-            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            # Log in to GHCR with the job's GITHUB_TOKEN: it can read this repo's packages and
+            # expires when the job ends, so no long-lived registry token is needed.
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Runtime secrets come from Doppler. The VPS user has a read-only service token
             # scoped to /opt/journei (doppler configure set token --scope /opt/journei).

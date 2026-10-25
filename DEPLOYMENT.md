@@ -139,45 +139,28 @@ Before the first deployment, you need to prepare the application directory and e
 
 ## 4. GitHub Repository Setup (Secrets)
 
-Your GitHub Actions automated workflow needs special permissions and sensitive information to do its job. Specifically, it needs to be able to upload (push) the Docker images it builds to GitHub's Container Registry, and it needs to securely log into your VPS to tell it to pull those new images.
+GitHub keeps a **single** secret, and everything else lives in Doppler, where values can be read again later (GitHub never shows a secret's value after it is saved).
 
-Because this information is sensitive (like passwords and private keys), you should never hardcode it into your files. Instead, GitHub provides a secure feature called "Secrets".
+### 4.1 Doppler: deploy settings
 
-Here is how to set them up:
+In Doppler project `journei`, config `prd`, add these references. The values themselves live once in `shared/prd`, because every app deploys to the same VPS:
 
-### 4.1 Create a Personal Access Token (PAT)
+| Variable | Value |
+| --- | --- |
+| `VPS_HOST` | `${shared.prd.VPS_HOST}` |
+| `VPS_USERNAME` | `${shared.prd.VPS_USERNAME}` |
+| `VPS_SSH_KEY` | `${shared.prd.VPS_SSH_KEY}` (the **private** key from step 1; its public half is in the VPS user's `authorized_keys`) |
 
-A Personal Access Token (PAT) acts as a secure password or an API key. Our automated workflow uses this token to prove to GitHub that it is allowed to upload our Docker images to the GitHub Container Registry (GHCR).
+The workflows read them with `DOPPLER_TOKEN` and mask them in the logs.
 
-1. **Navigate to Developer Settings:** Click on your profile picture in the top right corner of GitHub, then click **Settings**. Scroll down the left sidebar to the very bottom and click **Developer settings**.
-2. **Go to Tokens:** In the left sidebar, expand **Personal access tokens** and select **Tokens (classic)**.
-3. **Generate a new token:** Click the **Generate new token** button in the top right, and choose **Generate new token (classic)**. You may be asked to confirm your password.
-4. **Configure the token:**
-   - **Note:** Give it a descriptive name so you remember what it's for, like `GHCR Deploy`.
-   - **Expiration:** Choose how long the token is valid for (e.g., 30 days, 90 days, or No expiration). For security, it's generally better to set an expiration, but "No expiration" is easier for setting up and forgetting.
-   - **Select scopes:** This is where you give the token specific permissions. Scroll down to the **write:packages** option and check the box. Doing so will automatically check the **read:packages** box as well. This allows the workflow to upload and download Docker images associated with your account.
-5. **Save the token:** Scroll to the bottom and click **Generate token**.
-   - **IMPORTANT:** Copy the token immediately and save it somewhere temporarily (like a secure notepad). **You will not be able to see it again once you leave the page!**
+### 4.2 GitHub: the only repository secret
 
-### 4.2 Add Repository Secrets
+Settings → Secrets and variables → Actions → **New repository secret**:
 
-Now that you have your PAT and your SSH keys from Step 1, you need to store them securely inside your specific repository.
-
-1. **Navigate to Repository Secrets:** Go to your project's main repository page on GitHub. Click the **Settings** tab near the top. On the left sidebar, expand **Secrets and variables** and click on **Actions**.
-2. **Add new secrets:** Click the green **New repository secret** button. Repeat this for each secret below. The "Name" must match exactly what is written below, as the workflow specifically looks for these names.
-
-Add the following secrets:
-
-- **Name:** `VPS_IP`
-  - **Secret:** `123.45.67.89` (Replace this with the actual IP address of your Ubuntu server. The workflow uses this to know where your server is located on the internet).
-- **Name:** `VPS_USERNAME`
-  - **Secret:** `ubuntu` (or `root`, or whatever username you use to log into your server. The workflow uses this alongside the IP address to initiate the connection).
-- **Name:** `VPS_SSH_KEY`
-  - **Secret:** Paste the entire contents of the **private** SSH key (`github-actions-key`) you generated in Step 1. (This acts as the highly secure password that proves the automated workflow has the right to log into your server as the `VPS_USERNAME`).
-- **Name:** `GHCR_PAT`
-  - **Secret:** Paste the Personal Access Token you generated in step 4.1. (The workflow uses this to log into the GitHub Container Registry to upload the Docker images).
 - **Name:** `DOPPLER_TOKEN`
-  - **Secret:** A second read-only Doppler service token on `journei/prd`. The build reads `CLERK_PUBLISHABLE_KEY` (passed to the frontend as `VITE_CLERK_PUBLISHABLE_KEY`) and `VITE_GOOGLE_MAPS_API_KEY` from Doppler with it and fails if the Clerk key is missing.
+  - **Secret:** A read-only Doppler service token on `journei/prd` (separate from the VPS one). The build reads `CLERK_PUBLISHABLE_KEY` (passed to the frontend as `VITE_CLERK_PUBLISHABLE_KEY`) and `VITE_GOOGLE_MAPS_API_KEY` with it, and the deploy and clear-database workflows read the `VPS_*` settings.
+
+There is no personal access token: pushing images to GHCR and pulling them on the VPS use the job's own `GITHUB_TOKEN`, which expires when the job ends.
 
 ---
 

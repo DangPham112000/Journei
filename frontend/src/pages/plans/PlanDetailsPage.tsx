@@ -1,10 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGetPlanQuery, useGetPlacesForPlanQuery, useGetCategoriesQuery, useCreatePlaceMutation, useGetRecommendedPlacesLazyQuery, useGetScheduledActivitiesForPlanQuery, useCreateScheduledActivityMutation, useDeleteScheduledActivityMutation, useUpdatePlaceVisitStatusMutation, useUpdateScheduledActivityMutation } from '../../__generated__/graphql';
+import { useGetPlanQuery, useGetPlacesForPlanQuery, useGetCategoriesQuery, useCreatePlaceMutation, useGetRecommendedPlacesLazyQuery, useGetScheduledActivitiesForPlanQuery, useCreateScheduledActivityMutation, useDeleteScheduledActivityMutation, useUpdatePlaceVisitStatusMutation, useUpdateScheduledActivityMutation, useSetPlanCalendarSyncMutation, useGetCalendarConflictsLazyQuery } from '../../__generated__/graphql';
+import type { CalendarEventFieldsFragment } from '../../__generated__/graphql';
 import ScheduleGrid from '../../components/ScheduleGrid';
-import { Loader2, Plus, ArrowLeft, ExternalLink, MapPin } from 'lucide-react';
+import { Loader2, Plus, ArrowLeft, ExternalLink, MapPin, CalendarCheck, CalendarPlus, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -15,6 +16,31 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AddCategoryModal } from '../../components/AddCategoryModal';
+
+const formatRange = (start: string, end: string) =>
+  `${new Date(start).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })} - ${new Date(end).toLocaleTimeString([], { timeStyle: 'short' })}`;
+
+/** Events in the user's Event Manager calendar that overlap an activity (DAN-95). */
+function ConflictList({ conflicts }: { conflicts: CalendarEventFieldsFragment[] }) {
+  if (conflicts.length === 0) return null;
+  return (
+    <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm">
+      <p className="flex items-center gap-1 font-medium text-amber-800">
+        <AlertTriangle className="w-4 h-4" /> Overlaps your calendar
+      </p>
+      <ul className="mt-1 flex flex-col gap-1">
+        {conflicts.map((c) => (
+          <li key={c.id}>
+            <a href={c.url} target="_blank" rel="noreferrer" className="text-amber-900 hover:underline">
+              {c.title}
+            </a>{' '}
+            <span className="text-muted-foreground">{formatRange(c.startTime, c.endTime)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export default function PlanDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -53,6 +79,22 @@ export default function PlanDetailsPage() {
   // Edit form state
   const [editSchedulePlaceId, setEditSchedulePlaceId] = useState<string>('');
   const [updateSchedule] = useUpdateScheduledActivityMutation();
+
+  // Event Manager calendar (DAN-95)
+  const [setCalendarSync, { loading: syncLoading }] = useSetPlanCalendarSyncMutation();
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [getConflicts, { data: newSlotConflicts }] = useGetCalendarConflictsLazyQuery({ fetchPolicy: 'network-only' });
+
+  useEffect(() => {
+    if (confirmScheduleModalOpen && selectedTimeRange) {
+      getConflicts({
+        variables: {
+          startTime: selectedTimeRange.start.toISOString(),
+          endTime: selectedTimeRange.end.toISOString(),
+        },
+      });
+    }
+  }, [confirmScheduleModalOpen, selectedTimeRange, getConflicts]);
 
   if (planLoading || placesLoading) {
     return (
@@ -210,6 +252,18 @@ export default function PlanDetailsPage() {
       }
   };
 
+  const handleCalendarSync = async (enabled: boolean) => {
+      if (!enabled && !window.confirm('Remove this plan\'s activities from your Event Manager calendar?')) return;
+      setSyncError(null);
+      try {
+          await setCalendarSync({ variables: { planId: plan.id, enabled } });
+      } catch (e) {
+          setSyncError(e instanceof Error ? e.message : String(e));
+      } finally {
+          refetchSchedule();
+      }
+  };
+
   // Derive scheduled place IDs to split the bucket list in Tab 2
   const scheduledPlaceIds = new Set(scheduleData?.scheduledActivitiesForPlan.map(a => a.place.id) || []);
   const unscheduledPlaces = placesData?.placesForPlan.filter(p => !scheduledPlaceIds.has(p.id)) || [];
@@ -219,8 +273,13 @@ export default function PlanDetailsPage() {
       id: a.id,
       startTime: a.startTime,
       endTime: a.endTime,
-      title: a.place.name,
+      title: a.calendarConflicts.length > 0 ? `⚠ ${a.place.name}` : a.place.name,
   })) || [];
+  const unsyncedCount = plan.calendarSync
+      ? scheduleData?.scheduledActivitiesForPlan.filter(a => !a.calendarEvent).length ?? 0
+      : 0;
+  const conflictingCount = scheduleData?.scheduledActivitiesForPlan.filter(a => a.calendarConflicts.length > 0).length ?? 0;
+  const activityToEdit = scheduleData?.scheduledActivitiesForPlan.find(a => a.id === scheduleToEdit);
 
 
   return (
@@ -305,7 +364,33 @@ export default function PlanDetailsPage() {
         </TabsContent>
 
         <TabsContent value="schedule" className="flex-grow mt-0 flex flex-col md:flex-row gap-4 min-h-[500px]">
-          <div className="flex-grow md:w-2/3 h-full min-h-[400px]">
+          <div className="flex-grow md:w-2/3 h-full min-h-[400px] flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2 text-sm shrink-0">
+                {plan.calendarSync ? (
+                  <>
+                    <Badge variant="secondary" className="gap-1"><CalendarCheck className="w-3 h-3" /> On your Event Manager calendar</Badge>
+                    {unsyncedCount > 0 && (
+                      <>
+                        <span className="text-muted-foreground">{unsyncedCount} not on the calendar yet</span>
+                        <Button size="sm" variant="outline" disabled={syncLoading} onClick={() => handleCalendarSync(true)}>Sync now</Button>
+                      </>
+                    )}
+                    <Button size="sm" variant="ghost" disabled={syncLoading} onClick={() => handleCalendarSync(false)}>Turn off</Button>
+                  </>
+                ) : (
+                  <Button size="sm" variant="outline" disabled={syncLoading} onClick={() => handleCalendarSync(true)}>
+                    <CalendarPlus className="w-4 h-4 mr-2" /> Show on Event Manager calendar
+                  </Button>
+                )}
+                {syncLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {conflictingCount > 0 && (
+                  <span className="flex items-center gap-1 text-amber-700">
+                    <AlertTriangle className="w-4 h-4" /> {conflictingCount} {conflictingCount === 1 ? 'activity overlaps' : 'activities overlap'} other events
+                  </span>
+                )}
+                {syncError && <span className="text-destructive">{syncError}</span>}
+              </div>
+              <div className="flex-grow min-h-0">
               <ScheduleGrid
                  startDate={plan.startDate}
                  endDate={plan.endDate}
@@ -314,6 +399,7 @@ export default function PlanDetailsPage() {
                  onActivityClick={handleActivityClick}
                  selectedRange={selectedTimeRange}
               />
+              </div>
           </div>
           <div className="md:w-1/3 w-full flex flex-col gap-4 h-full">
               <Card className="flex-grow flex flex-col overflow-hidden">
@@ -478,6 +564,9 @@ export default function PlanDetailsPage() {
              <p className="font-medium">
                {selectedTimeRange && `${selectedTimeRange.start.toLocaleString()} - ${selectedTimeRange.end.toLocaleTimeString()}`}
              </p>
+             <div className="mt-4">
+               <ConflictList conflicts={newSlotConflicts?.calendarConflicts ?? []} />
+             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={handleCancelSchedule}>Cancel</Button>
@@ -492,6 +581,17 @@ export default function PlanDetailsPage() {
             <DialogTitle>Edit Scheduled Activity</DialogTitle>
           </DialogHeader>
           <div className="py-4 flex flex-col gap-4">
+             {activityToEdit && (
+               <div className="flex flex-col gap-2 text-sm">
+                 <p className="text-muted-foreground">{formatRange(activityToEdit.startTime, activityToEdit.endTime)}</p>
+                 {activityToEdit.calendarEvent && (
+                   <a href={activityToEdit.calendarEvent.url} target="_blank" rel="noreferrer" className="flex items-center text-blue-600 hover:underline">
+                     Open in Event Manager <ExternalLink className="w-3 h-3 ml-1" />
+                   </a>
+                 )}
+                 <ConflictList conflicts={activityToEdit.calendarConflicts} />
+               </div>
+             )}
              <div className="grid gap-2">
                 <Label>Change Place</Label>
                 <Select value={editSchedulePlaceId} onValueChange={(val) => val && setEditSchedulePlaceId(val)}>

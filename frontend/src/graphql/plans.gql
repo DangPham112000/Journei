@@ -17,6 +17,7 @@ query GetPlan($id: ID!) {
     title
     startDate
     endDate
+    calendarSync
     destinations {
       id
       name
@@ -126,6 +127,13 @@ query GetScheduledActivitiesForPlan($planId: ID!) {
     id
     startTime
     endTime
+    calendarEvent {
+      id
+      url
+    }
+    calendarConflicts {
+      ...CalendarEventFields
+    }
     place {
       id
       name
@@ -185,5 +193,26 @@ mutation UpdateScheduledActivity($id: ID!, $placeId: ID, $startTime: String, $en
       id
       name
     }
+  }
+}
+
+fragment CalendarEventFields on CalendarEvent {
+  id
+  title
+  startTime
+  endTime
+  url
+}
+
+query GetCalendarConflicts($startTime: String!, $endTime: String!, $excludeActivityId: ID) {
+  calendarConflicts(startTime: $startTime, endTime: $endTime, excludeActivityId: $excludeActivityId) {
+    ...CalendarEventFields
+  }
+}
+
+mutation SetPlanCalendarSync($planId: ID!, $enabled: Boolean!) {
+  setPlanCalendarSync(planId: $planId, enabled: $enabled) {
+    id
+    calendarSync
   }
 }

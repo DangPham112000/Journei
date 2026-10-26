@@ -51,6 +51,10 @@ services:
       - CLERK_AUTHORIZED_PARTIES=https://${DOMAIN}
       - NODE_ENV=production
       - FRONTEND_URL=https://${DOMAIN}
+      # Event Manager's API over the shared ecosystem network, for calendar sync (DAN-95).
+      # Its CLERK_AUTHORIZED_PARTIES must include https://${DOMAIN}.
+      - EVENT_MANAGER_GRAPHQL_URL=http://event-manager-backend:4000/graphql
+      - EVENT_MANAGER_URL=https://events.dantepham.site
     networks:
       - default
       - ecosystem

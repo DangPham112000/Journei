@@ -3,7 +3,7 @@ import express from 'express';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { getUserFromOAuthHeader, type AuthUser } from '../auth';
-import { User } from '../models/User';
+import { MOCK_USER } from '../coreUsers';
 import { logger } from '../utils/logger';
 import { registerTools } from './tools';
 
@@ -24,8 +24,7 @@ function clerkIssuer(): string | null {
 async function authenticate(req: Request): Promise<AuthUser | null> {
   if (process.env.MOCK_MODE === 'true') {
     // Mock Mode has no Clerk: every request is the seeded mock user.
-    const mockUser = await User.findOne({ email: 'mockuser@example.com' });
-    return mockUser && { id: String(mockUser._id), email: mockUser.email };
+    return { id: MOCK_USER.clerkId, email: MOCK_USER.email };
   }
   return getUserFromOAuthHeader(req.headers.authorization);
 }

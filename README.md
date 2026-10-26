@@ -115,7 +115,7 @@ We use [pnpm Workspaces](https://pnpm.io/workspaces) to manage dependencies.
 
 **Mock Mode Details:**
 By default, `pnpm start` spins up the application in a sandboxed **Mock Mode**. You do not need any environment variables or external API keys to start working!
-- **Database:** An in-memory MongoDB instance is automatically created and seeded with a mock user and events.
+- **Database:** An in-memory MongoDB instance is automatically created and seeded with a mock user (in its own `core.users`) and sample plans.
 - **Authentication:** Clerk is bypassed: the frontend stubs `@clerk/react` via a Vite alias and the backend treats every request as the seeded mock user.
 - **Maps:** Google Maps integration is mocked seamlessly via Vite aliases.
 

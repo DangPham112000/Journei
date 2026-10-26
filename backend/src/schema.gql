@@ -1,9 +1,9 @@
+"A user from the shared core.users. `id` is the Clerk user id."
 type User {
   id: ID!
-  googleId: String
   email: String!
   name: String!
-  picture: String
+  avatar: String
 }
 
 type Category {
@@ -22,6 +22,7 @@ type Plan {
   startDate: String!
   endDate: String!
   destinations: [Destination!]!
+  "Clerk user id of the owner."
   userId: ID!
   googleEventId: String
 }

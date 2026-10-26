@@ -1,4 +1,4 @@
-import { User } from '../models/User';
+import { getUserByClerkId } from '../auth';
 import { Category } from '../models/Category';
 import { Destination } from '../models/Destination';
 import { Plan } from '../models/Plan';
@@ -19,7 +19,7 @@ export const resolvers = {
       if (!context.user) {
         return null;
       }
-      return await User.findById(context.user.id);
+      return await getUserByClerkId(context.user.id);
     },
 
     categories: async () => {

@@ -11,7 +11,8 @@ import { resolvers } from './graphql/resolvers';
 import { logger } from './utils/logger';
 import { graphqlLoggerPlugin } from './utils/graphqlLogger';
 import { getUserFromAuthHeader, type AuthUser } from './auth';
-import { User } from './models/User';
+import { MOCK_USER } from './coreUsers';
+import { migrateUsersToClerkIds } from './migrateToClerkIds';
 import { createMcpRouter } from './mcp';
 
 const typeDefs = readFileSync(path.join(__dirname, 'schema.gql'), 'utf8');
@@ -39,11 +40,14 @@ async function startServer() {
     const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/journey-planner';
     await mongoose.connect(mongoUri);
     logger.info('Connected to MongoDB');
-    // Replaces the old non-sparse unique googleId index, so users who sign in
-    // without Google (no googleId) do not collide on null.
-    await User.syncIndexes();
   } catch (error) {
     logger.error({ err: error }, 'Error connecting to MongoDB');
+  }
+  try {
+    // DAN-93: plans reference users by Clerk id; the old users collection goes away.
+    await migrateUsersToClerkIds();
+  } catch (error) {
+    logger.error({ err: error }, 'DAN-93: migrating users to Clerk ids failed');
   }
 
   const isMockMode = process.env.MOCK_MODE === 'true';
@@ -66,8 +70,7 @@ async function startServer() {
       let user: AuthUser | null;
       if (isMockMode) {
         // Mock Mode has no Clerk: every request is the seeded mock user.
-        const mockUser = await User.findOne({ email: 'mockuser@example.com' });
-        user = mockUser && { id: String(mockUser._id), email: mockUser.email };
+        user = { id: MOCK_USER.clerkId, email: MOCK_USER.email };
       } else {
         user = await getUserFromAuthHeader(req.headers.authorization);
       }

@@ -1,6 +1,6 @@
 import { createClerkClient, verifyToken } from '@clerk/backend';
 import { verifyMachineAuthToken } from '@clerk/backend/internal';
-import { User } from './models/User';
+import { findCoreUser, toUser, type JourneiUser } from './coreUsers';
 import { logger } from './utils/logger';
 
 // Read lazily: dotenv has not loaded backend/.env yet when this module is imported.
@@ -20,16 +20,13 @@ const getAuthorizedParties = () =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-/** The signed-in user as resolvers see it in `context.user`. */
+/** The signed-in user as resolvers see it in `context.user`. `id` is the Clerk user id. */
 export interface AuthUser {
   id: string;
   email: string;
 }
 
-const toAuthUser = (doc: { _id: unknown; email: string }): AuthUser => ({
-  id: String(doc._id),
-  email: doc.email,
-});
+const toAuthUser = (user: JourneiUser): AuthUser => ({ id: user.id, email: user.email });
 
 /**
  * Resolve the signed-in user from an "Authorization: Bearer <Clerk session token>" header.
@@ -52,7 +49,8 @@ export async function getUserFromAuthHeader(header: string | undefined): Promise
     return null;
   }
 
-  return getUserByClerkId(clerkId);
+  const user = await getUserByClerkId(clerkId);
+  return user && toAuthUser(user);
 }
 
 /**
@@ -68,7 +66,8 @@ export async function getUserFromOAuthHeader(header: string | undefined): Promis
   try {
     const { data, errors } = await verifyMachineAuthToken(token, { secretKey });
     if (errors || !data || !('subject' in data) || data.revoked || data.expired) return null;
-    return getUserByClerkId(data.subject);
+    const user = await getUserByClerkId(data.subject);
+    return user && toAuthUser(user);
   } catch (error) {
     logger.warn({ err: error }, 'Invalid Clerk OAuth access token');
     return null;
@@ -76,42 +75,28 @@ export async function getUserFromOAuthHeader(header: string | undefined): Promis
 }
 
 /**
- * Find the Mongo user for a Clerk user id. The first time, link to an existing
- * user with the same email (so users from the old Google login keep their
- * plans) or create one.
+ * The user for a Clerk user id, read from the shared core.users. Falls back to the Clerk API
+ * when core.users does not have the user yet (its webhook can arrive a moment after a brand-new
+ * user's first request). Never writes core.users.
  */
-async function getUserByClerkId(clerkId: string): Promise<AuthUser | null> {
+export async function getUserByClerkId(clerkId: string): Promise<JourneiUser | null> {
+  const user = await findCoreUser(clerkId);
   const clerk = getClerk();
-  if (!clerk) return null;
-  const existing = await User.findOne({ clerkId });
-  if (existing) return toAuthUser(existing);
+  if (user || !clerk) return user;
 
-  const clerkUser = await clerk.users.getUser(clerkId);
-  const email = (
-    clerkUser.primaryEmailAddress?.emailAddress ?? clerkUser.emailAddresses[0]?.emailAddress
-  )?.toLowerCase();
-  if (!email) return null;
-
-  const google = clerkUser.externalAccounts.find((a) => a.provider.includes('google'));
-  const name =
-    [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') ||
-    clerkUser.username ||
-    email.split('@')[0];
-
-  // Old Google-login users may have a mixed-case email, so match case-insensitively.
-  const escaped = email.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const user = await User.findOneAndUpdate(
-    { email: new RegExp(`^${escaped}$`, 'i') },
-    {
-      $set: { clerkId },
-      $setOnInsert: {
-        email,
-        name,
-        picture: clerkUser.imageUrl,
-        ...(google?.providerUserId && { googleId: google.providerUserId }),
-      },
-    },
-    { upsert: true, new: true },
-  );
-  return toAuthUser(user);
+  try {
+    const clerkUser = await clerk.users.getUser(clerkId);
+    const email = (
+      clerkUser.primaryEmailAddress?.emailAddress ?? clerkUser.emailAddresses[0]?.emailAddress
+    )?.toLowerCase();
+    if (!email) return null;
+    const name =
+      [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') ||
+      clerkUser.username ||
+      null;
+    return toUser({ clerkId, email, name, avatar: clerkUser.imageUrl || null });
+  } catch (error) {
+    logger.warn({ err: error, clerkId }, 'User not found in core.users or Clerk');
+    return null;
+  }
 }

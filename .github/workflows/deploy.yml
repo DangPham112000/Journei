@@ -170,7 +170,7 @@ jobs:
           host: ${{ env.VPS_HOST }}
           username: ${{ env.VPS_USERNAME }}
           key: ${{ env.VPS_SSH_KEY }}
-          source: "docker-compose.yml,nginx/"
+          source: "docker-compose.yml,nginx/,scripts/backup-db.sh"
           target: "/opt/journei"
 
       - name: Deploy to VPS
@@ -218,6 +218,10 @@ jobs:
             # Update Nginx config with DOMAIN
             DOMAIN_VALUE=$(doppler secrets get DOMAIN --plain)
             sed -i "s/server_name _;/server_name ${DOMAIN_VALUE};/g" nginx/nginx.conf
+
+            # One-time dump before the backend that moves plans to Clerk ids and drops the old
+            # users collection (DAN-93). No-op once backups/pre-dan-93.archive exists.
+            doppler run -- bash scripts/backup-db.sh pre-dan-93
 
             # Restart the services with the secrets from Doppler in the environment, where
             # docker compose fills in ${CLERK_SECRET_KEY}, ${DOMAIN} and the rest.

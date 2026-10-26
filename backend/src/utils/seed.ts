@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { User } from '../models/User';
+import { coreUsers, MOCK_USER } from '../coreUsers';
 import { Category } from '../models/Category';
 import { Destination } from '../models/Destination';
 import { Plan } from '../models/Plan';
@@ -9,14 +9,8 @@ import { ScheduledActivity } from '../models/ScheduledActivity';
 export const seedMockData = async () => {
   console.log('Seeding mock data for development mode...');
 
-  // Create mock user
-  const mockUser = await User.create({
-    googleId: 'mock-google-id-12345',
-    email: 'mockuser@example.com',
-    name: 'Mock User',
-    picture: 'https://via.placeholder.com/150',
-    refreshToken: 'mock-refresh-token',
-  });
+  // Mock user in the shared user table (written by core-users in production).
+  await coreUsers().insertOne({ ...MOCK_USER });
 
   // Create mock categories
   const catEntertainment = await Category.create({ name: 'Entertainment' });
@@ -36,7 +30,7 @@ export const seedMockData = async () => {
     startDate: new Date(now.getTime() + 24 * 60 * 60 * 1000), // Tomorrow
     endDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000), // In 3 days
     destinations: [destDalat._id],
-    userId: mockUser._id,
+    userId: MOCK_USER.clerkId,
   });
 
   // Create mock places
@@ -71,5 +65,4 @@ export const seedMockData = async () => {
 
   console.log('Mock data seeded successfully.');
 
-  return { mockUser };
 };

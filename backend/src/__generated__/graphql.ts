@@ -138,6 +138,7 @@ export type Plan = {
   id: Scalars['ID']['output'];
   startDate: Scalars['String']['output'];
   title: Scalars['String']['output'];
+  /** Clerk user id of the owner. */
   userId: Scalars['ID']['output'];
 };
 
@@ -182,13 +183,13 @@ export type ScheduledActivity = {
   startTime: Scalars['String']['output'];
 };
 
+/** A user from the shared core.users. `id` is the Clerk user id. */
 export type User = {
   __typename?: 'User';
+  avatar?: Maybe<Scalars['String']['output']>;
   email: Scalars['String']['output'];
-  googleId?: Maybe<Scalars['String']['output']>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
-  picture?: Maybe<Scalars['String']['output']>;
 };
 
 
@@ -358,11 +359,10 @@ export type ScheduledActivityResolvers<ContextType = any, ParentType extends Res
 };
 
 export type UserResolvers<ContextType = any, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
+  avatar?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   email?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  googleId?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   name?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
-  picture?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
 };
 
 export type Resolvers<ContextType = any> = {

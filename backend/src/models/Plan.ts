@@ -1,5 +1,4 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import { IUser } from './User';
 import { IDestination } from './Destination';
 
 export interface IPlan extends Document {
@@ -7,7 +6,8 @@ export interface IPlan extends Document {
   startDate: Date;
   endDate: Date;
   destinations: mongoose.Types.ObjectId[] | IDestination[];
-  userId: mongoose.Types.ObjectId | IUser;
+  /** Clerk user id of the owner; the user's details are in core.users (DAN-93). */
+  userId: string;
   googleEventId?: string;
 }
 
@@ -16,7 +16,7 @@ const PlanSchema: Schema = new Schema({
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
   destinations: [{ type: Schema.Types.ObjectId, ref: 'Destination', required: true }],
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  userId: { type: String, required: true, index: true },
   googleEventId: { type: String },
 }, { timestamps: true });
 

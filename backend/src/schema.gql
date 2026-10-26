@@ -25,6 +25,8 @@ type Plan {
   "Clerk user id of the owner."
   userId: ID!
   googleEventId: String
+  "Whether the plan's activities are copied to the owner's Event Manager calendar."
+  calendarSync: Boolean!
 }
 
 type Place {
@@ -44,6 +46,29 @@ type ScheduledActivity {
   place: Place!
   startTime: String!
   endTime: String!
+  "The activity's event in Event Manager, or null when it is not on the calendar."
+  calendarEvent: CalendarEventLink
+  """
+  The user's joined Event Manager events that overlap this activity, other than its own event.
+  Empty when Event Manager cannot be reached.
+  """
+  calendarConflicts: [CalendarEvent!]!
+}
+
+"A reference to an event in another app of the ecosystem. Only the id is stored, never a copy."
+type CalendarEventLink {
+  app: String!
+  id: ID!
+  url: String!
+}
+
+"An event in the user's Event Manager calendar."
+type CalendarEvent {
+  id: ID!
+  title: String!
+  startTime: String!
+  endTime: String!
+  url: String!
 }
 
 type Query {
@@ -60,6 +85,12 @@ type Query {
   recommendedPlaces(destinationId: ID!): [Place!]!
 
   scheduledActivitiesForPlan(planId: ID!): [ScheduledActivity!]!
+
+  """
+  The user's joined Event Manager events overlapping a time range, skipping the event of
+  excludeActivityId (the activity being moved). Empty when Event Manager cannot be reached.
+  """
+  calendarConflicts(startTime: String!, endTime: String!, excludeActivityId: ID): [CalendarEvent!]!
 }
 
 type Mutation {
@@ -82,6 +113,12 @@ type Mutation {
   ): Plan!
 
   deletePlan(id: ID!): Boolean!
+
+  """
+  Turn copying the plan's activities to the Event Manager calendar on or off. Turning it on (again)
+  creates or updates every activity's event; turning it off deletes them.
+  """
+  setPlanCalendarSync(planId: ID!, enabled: Boolean!): Plan!
 
   createPlace(
     name: String!

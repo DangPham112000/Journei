@@ -16,6 +16,24 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+/** An event in the user's Event Manager calendar. */
+export type CalendarEvent = {
+  __typename?: 'CalendarEvent';
+  endTime: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  startTime: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+  url: Scalars['String']['output'];
+};
+
+/** A reference to an event in another app of the ecosystem. Only the id is stored, never a copy. */
+export type CalendarEventLink = {
+  __typename?: 'CalendarEventLink';
+  app: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  url: Scalars['String']['output'];
+};
+
 export type Category = {
   __typename?: 'Category';
   id: Scalars['ID']['output'];
@@ -38,6 +56,11 @@ export type Mutation = {
   deletePlace: Scalars['Boolean']['output'];
   deletePlan: Scalars['Boolean']['output'];
   deleteScheduledActivity: Scalars['Boolean']['output'];
+  /**
+   * Turn copying the plan's activities to the Event Manager calendar on or off. Turning it on (again)
+   * creates or updates every activity's event; turning it off deletes them.
+   */
+  setPlanCalendarSync: Plan;
   updatePlace: Place;
   updatePlan: Plan;
   updateScheduledActivity: ScheduledActivity;
@@ -95,6 +118,12 @@ export type MutationDeleteScheduledActivityArgs = {
 };
 
 
+export type MutationSetPlanCalendarSyncArgs = {
+  enabled: Scalars['Boolean']['input'];
+  planId: Scalars['ID']['input'];
+};
+
+
 export type MutationUpdatePlaceArgs = {
   categoryId?: InputMaybe<Scalars['ID']['input']>;
   id: Scalars['ID']['input'];
@@ -137,6 +166,8 @@ export type Place = {
 
 export type Plan = {
   __typename?: 'Plan';
+  /** Whether the plan's activities are copied to the owner's Event Manager calendar. */
+  calendarSync: Scalars['Boolean']['output'];
   destinations: Array<Destination>;
   endDate: Scalars['String']['output'];
   googleEventId?: Maybe<Scalars['String']['output']>;
@@ -149,6 +180,11 @@ export type Plan = {
 
 export type Query = {
   __typename?: 'Query';
+  /**
+   * The user's joined Event Manager events overlapping a time range, skipping the event of
+   * excludeActivityId (the activity being moved). Empty when Event Manager cannot be reached.
+   */
+  calendarConflicts: Array<CalendarEvent>;
   categories: Array<Category>;
   destinations: Array<Destination>;
   hello: Scalars['String']['output'];
@@ -158,6 +194,13 @@ export type Query = {
   plan?: Maybe<Plan>;
   recommendedPlaces: Array<Place>;
   scheduledActivitiesForPlan: Array<ScheduledActivity>;
+};
+
+
+export type QueryCalendarConflictsArgs = {
+  endTime: Scalars['String']['input'];
+  excludeActivityId?: InputMaybe<Scalars['ID']['input']>;
+  startTime: Scalars['String']['input'];
 };
 
 
@@ -182,6 +225,13 @@ export type QueryScheduledActivitiesForPlanArgs = {
 
 export type ScheduledActivity = {
   __typename?: 'ScheduledActivity';
+  /**
+   * The user's joined Event Manager events that overlap this activity, other than its own event.
+   * Empty when Event Manager cannot be reached.
+   */
+  calendarConflicts: Array<CalendarEvent>;
+  /** The activity's event in Event Manager, or null when it is not on the calendar. */
+  calendarEvent?: Maybe<CalendarEventLink>;
   endTime: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   place: Place;
@@ -212,7 +262,7 @@ export type GetPlanQueryVariables = Exact<{
 }>;
 
 
-export type GetPlanQuery = { plan: { id: string, title: string, startDate: string, endDate: string, destinations: Array<{ id: string, name: string }> } | null };
+export type GetPlanQuery = { plan: { id: string, title: string, startDate: string, endDate: string, calendarSync: boolean, destinations: Array<{ id: string, name: string }> } | null };
 
 export type GetDestinationsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -273,7 +323,7 @@ export type GetScheduledActivitiesForPlanQueryVariables = Exact<{
 }>;
 
 
-export type GetScheduledActivitiesForPlanQuery = { scheduledActivitiesForPlan: Array<{ id: string, startTime: string, endTime: string, place: { id: string, name: string, category: { name: string }, destination: { name: string } } }> };
+export type GetScheduledActivitiesForPlanQuery = { scheduledActivitiesForPlan: Array<{ id: string, startTime: string, endTime: string, calendarEvent: { id: string, url: string } | null, calendarConflicts: Array<{ id: string, title: string, startTime: string, endTime: string, url: string }>, place: { id: string, name: string, category: { name: string }, destination: { name: string } } }> };
 
 export type CreateScheduledActivityMutationVariables = Exact<{
   placeId: string | number;
@@ -323,12 +373,39 @@ export type UpdateScheduledActivityMutationVariables = Exact<{
 
 export type UpdateScheduledActivityMutation = { updateScheduledActivity: { id: string, startTime: string, endTime: string, place: { id: string, name: string } } };
 
+export type CalendarEventFieldsFragment = { id: string, title: string, startTime: string, endTime: string, url: string };
+
+export type GetCalendarConflictsQueryVariables = Exact<{
+  startTime: string;
+  endTime: string;
+  excludeActivityId?: string | number | null | undefined;
+}>;
+
+
+export type GetCalendarConflictsQuery = { calendarConflicts: Array<{ id: string, title: string, startTime: string, endTime: string, url: string }> };
+
+export type SetPlanCalendarSyncMutationVariables = Exact<{
+  planId: string | number;
+  enabled: boolean;
+}>;
+
+
+export type SetPlanCalendarSyncMutation = { setPlanCalendarSync: { id: string, calendarSync: boolean } };
+
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type MeQuery = { me: { id: string, name: string, email: string, avatar: string | null } | null };
 
-
+export const CalendarEventFieldsFragmentDoc = gql`
+    fragment CalendarEventFields on CalendarEvent {
+  id
+  title
+  startTime
+  endTime
+  url
+}
+    `;
 export const GetHelloDocument = gql`
     query GetHello {
   hello
@@ -425,6 +502,7 @@ export const GetPlanDocument = gql`
     title
     startDate
     endDate
+    calendarSync
     destinations {
       id
       name
@@ -794,6 +872,13 @@ export const GetScheduledActivitiesForPlanDocument = gql`
     id
     startTime
     endTime
+    calendarEvent {
+      id
+      url
+    }
+    calendarConflicts {
+      ...CalendarEventFields
+    }
     place {
       id
       name
@@ -806,7 +891,7 @@ export const GetScheduledActivitiesForPlanDocument = gql`
     }
   }
 }
-    `;
+    ${CalendarEventFieldsFragmentDoc}`;
 
 /**
  * __useGetScheduledActivitiesForPlanQuery__
@@ -1069,6 +1154,90 @@ export function useUpdateScheduledActivityMutation(baseOptions?: Apollo.Mutation
 export type UpdateScheduledActivityMutationHookResult = ReturnType<typeof useUpdateScheduledActivityMutation>;
 export type UpdateScheduledActivityMutationResult = Apollo.MutationResult<UpdateScheduledActivityMutation>;
 export type UpdateScheduledActivityMutationOptions = Apollo.BaseMutationOptions<UpdateScheduledActivityMutation, UpdateScheduledActivityMutationVariables>;
+export const GetCalendarConflictsDocument = gql`
+    query GetCalendarConflicts($startTime: String!, $endTime: String!, $excludeActivityId: ID) {
+  calendarConflicts(
+    startTime: $startTime
+    endTime: $endTime
+    excludeActivityId: $excludeActivityId
+  ) {
+    ...CalendarEventFields
+  }
+}
+    ${CalendarEventFieldsFragmentDoc}`;
+
+/**
+ * __useGetCalendarConflictsQuery__
+ *
+ * To run a query within a React component, call `useGetCalendarConflictsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetCalendarConflictsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetCalendarConflictsQuery({
+ *   variables: {
+ *      startTime: // value for 'startTime'
+ *      endTime: // value for 'endTime'
+ *      excludeActivityId: // value for 'excludeActivityId'
+ *   },
+ * });
+ */
+export function useGetCalendarConflictsQuery(baseOptions: Apollo.QueryHookOptions<GetCalendarConflictsQuery, GetCalendarConflictsQueryVariables> & ({ variables: GetCalendarConflictsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetCalendarConflictsQuery, GetCalendarConflictsQueryVariables>(GetCalendarConflictsDocument, options);
+      }
+export function useGetCalendarConflictsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCalendarConflictsQuery, GetCalendarConflictsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetCalendarConflictsQuery, GetCalendarConflictsQueryVariables>(GetCalendarConflictsDocument, options);
+        }
+// @ts-ignore
+export function useGetCalendarConflictsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetCalendarConflictsQuery, GetCalendarConflictsQueryVariables>): Apollo.UseSuspenseQueryResult<GetCalendarConflictsQuery, GetCalendarConflictsQueryVariables>;
+export function useGetCalendarConflictsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetCalendarConflictsQuery, GetCalendarConflictsQueryVariables>): Apollo.UseSuspenseQueryResult<GetCalendarConflictsQuery | undefined, GetCalendarConflictsQueryVariables>;
+export function useGetCalendarConflictsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetCalendarConflictsQuery, GetCalendarConflictsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetCalendarConflictsQuery, GetCalendarConflictsQueryVariables>(GetCalendarConflictsDocument, options);
+        }
+export type GetCalendarConflictsQueryHookResult = ReturnType<typeof useGetCalendarConflictsQuery>;
+export type GetCalendarConflictsLazyQueryHookResult = ReturnType<typeof useGetCalendarConflictsLazyQuery>;
+export type GetCalendarConflictsSuspenseQueryHookResult = ReturnType<typeof useGetCalendarConflictsSuspenseQuery>;
+export type GetCalendarConflictsQueryResult = Apollo.QueryResult<GetCalendarConflictsQuery, GetCalendarConflictsQueryVariables>;
+export const SetPlanCalendarSyncDocument = gql`
+    mutation SetPlanCalendarSync($planId: ID!, $enabled: Boolean!) {
+  setPlanCalendarSync(planId: $planId, enabled: $enabled) {
+    id
+    calendarSync
+  }
+}
+    `;
+export type SetPlanCalendarSyncMutationFn = Apollo.MutationFunction<SetPlanCalendarSyncMutation, SetPlanCalendarSyncMutationVariables>;
+
+/**
+ * __useSetPlanCalendarSyncMutation__
+ *
+ * To run a mutation, you first call `useSetPlanCalendarSyncMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetPlanCalendarSyncMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setPlanCalendarSyncMutation, { data, loading, error }] = useSetPlanCalendarSyncMutation({
+ *   variables: {
+ *      planId: // value for 'planId'
+ *      enabled: // value for 'enabled'
+ *   },
+ * });
+ */
+export function useSetPlanCalendarSyncMutation(baseOptions?: Apollo.MutationHookOptions<SetPlanCalendarSyncMutation, SetPlanCalendarSyncMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<SetPlanCalendarSyncMutation, SetPlanCalendarSyncMutationVariables>(SetPlanCalendarSyncDocument, options);
+      }
+export type SetPlanCalendarSyncMutationHookResult = ReturnType<typeof useSetPlanCalendarSyncMutation>;
+export type SetPlanCalendarSyncMutationResult = Apollo.MutationResult<SetPlanCalendarSyncMutation>;
+export type SetPlanCalendarSyncMutationOptions = Apollo.BaseMutationOptions<SetPlanCalendarSyncMutation, SetPlanCalendarSyncMutationVariables>;
 export const MeDocument = gql`
     query Me {
   me {

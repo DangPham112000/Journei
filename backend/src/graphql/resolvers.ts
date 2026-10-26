@@ -4,6 +4,8 @@ import { Destination } from '../models/Destination';
 import { Plan } from '../models/Plan';
 import { Place } from '../models/Place';
 import { ScheduledActivity } from '../models/ScheduledActivity';
+import { removeActivityEvents, sessionToken, syncActivity, syncPlan } from '../calendarSync';
+import { eventUrl, findConflicts, logEventManagerFailure, type CalendarEvent } from '../eventManager';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -11,6 +13,30 @@ const requireAuth = (resolver: any) => async (parent: any, args: any, context: a
   if (!context.user) throw new Error('Not authenticated');
   return resolver(parent, args, context, info);
 };
+
+const toCalendarEvents = (events: CalendarEvent[]) =>
+  events.map((e) => ({ ...e, url: eventUrl(e.id) }));
+
+/** Event Manager events overlapping a range; empty without a session token or on failure. */
+async function calendarConflicts(
+  context: any,
+  startTime: string,
+  endTime: string,
+  excludeEventId?: string,
+) {
+  const token = sessionToken(context);
+  if (!token) return [];
+  try {
+    return toCalendarEvents(await findConflicts(token, startTime, endTime, excludeEventId));
+  } catch (error) {
+    logEventManagerFailure(error, 'checking conflicts');
+    return [];
+  }
+}
+
+/** Activities of the given places, with their calendar links, before they are deleted. */
+const activitiesOfPlaces = (placeIds: unknown[]) =>
+  ScheduledActivity.find({ placeId: { $in: placeIds } }).select('calendarEvent');
 
 export const resolvers = {
   Query: {
@@ -79,10 +105,20 @@ export const resolvers = {
         })
         .sort({ startTime: 1 });
     }),
+
+    calendarConflicts: requireAuth(async (_: any, args: any, context: any) => {
+      let excludeEventId: string | undefined;
+      if (args.excludeActivityId) {
+        const activity = await ScheduledActivity.findById(args.excludeActivityId);
+        excludeEventId = activity?.calendarEvent?.id;
+      }
+      return calendarConflicts(context, args.startTime, args.endTime, excludeEventId);
+    }),
   },
 
   Plan: {
     id: (parent: any) => parent._id || parent.id,
+    calendarSync: (parent: any) => !!parent.calendarSync,
   },
 
   Place: {
@@ -96,6 +132,17 @@ export const resolvers = {
     place: (parent: any) => parent.placeId,
     startTime: (parent: any) => parent.startTime.toISOString(),
     endTime: (parent: any) => parent.endTime.toISOString(),
+    calendarEvent: (parent: any) =>
+      parent.calendarEvent?.id
+        ? { app: parent.calendarEvent.app, id: parent.calendarEvent.id, url: eventUrl(parent.calendarEvent.id) }
+        : null,
+    calendarConflicts: (parent: any, _: any, context: any) =>
+      calendarConflicts(
+        context,
+        parent.startTime.toISOString(),
+        parent.endTime.toISOString(),
+        parent.calendarEvent?.id,
+      ),
   },
 
   Mutation: {
@@ -127,12 +174,15 @@ export const resolvers = {
       if (!plan) throw new Error('Plan not found');
       if (plan.userId.toString() !== context.user.id) throw new Error('Not authorized');
 
+      const titleChanged = !!args.title && args.title !== plan.title;
       if (args.title) plan.title = args.title;
       if (args.startDate) plan.startDate = args.startDate;
       if (args.endDate) plan.endDate = args.endDate;
       if (args.destinationIds) plan.destinations = args.destinationIds;
 
       await plan.save();
+      // The plan's title is in each event's description.
+      if (titleChanged && plan.calendarSync) await syncPlan(plan._id, sessionToken(context));
       return await Plan.findById(plan._id).populate('destinations');
     }),
 
@@ -144,10 +194,25 @@ export const resolvers = {
       // delete all places and activities related to this plan
       const places = await Place.find({ planId: id });
       const placeIds = places.map(p => p._id);
+      await removeActivityEvents(await activitiesOfPlaces(placeIds), sessionToken(context));
       await ScheduledActivity.deleteMany({ placeId: { $in: placeIds } });
       await Place.deleteMany({ planId: id });
       await Plan.findByIdAndDelete(id);
       return true;
+    }),
+
+    setPlanCalendarSync: requireAuth(async (_: any, { planId, enabled }: { planId: string; enabled: boolean }, context: any) => {
+      const plan = await Plan.findById(planId);
+      if (!plan) throw new Error('Plan not found');
+      if (plan.userId.toString() !== context.user.id) throw new Error('Not authorized');
+
+      const token = sessionToken(context);
+      if (!token) throw new Error('Calendar sync needs a signed-in browser session');
+      plan.calendarSync = enabled;
+      await plan.save();
+      const failed = await syncPlan(plan._id, token);
+      if (failed) throw new Error(`${failed} activities could not be synced with Event Manager. Try again later.`);
+      return await Plan.findById(plan._id).populate('destinations');
     }),
 
     createPlace: requireAuth(async (_: any, args: any, context: any) => {
@@ -182,8 +247,14 @@ export const resolvers = {
       if (args.reviewLinks !== undefined) place.reviewLinks = args.reviewLinks;
       if (args.notes !== undefined) place.notes = args.notes;
       if (args.visitStatus !== undefined) place.visitStatus = args.visitStatus;
+      const nameChanged = place.isModified('name');
 
       await place.save();
+      // The place's name is its activities' event title.
+      if (nameChanged && plan.calendarSync) {
+        const activities = await ScheduledActivity.find({ placeId: place._id }).select('_id');
+        for (const activity of activities) await syncActivity(activity._id, sessionToken(context));
+      }
       return await Place.findById(place._id)
         .populate('destinationId')
         .populate('categoryId');
@@ -195,6 +266,7 @@ export const resolvers = {
       const plan = await Plan.findById(place.planId);
       if (!plan || plan.userId.toString() !== context.user.id) throw new Error('Not authorized');
 
+      await removeActivityEvents(await activitiesOfPlaces([id]), sessionToken(context));
       await ScheduledActivity.deleteMany({ placeId: id });
       await Place.findByIdAndDelete(id);
       return true;
@@ -211,6 +283,7 @@ export const resolvers = {
         startTime: args.startTime,
         endTime: args.endTime,
       });
+      await syncActivity(activity._id, sessionToken(context));
 
       return await ScheduledActivity.findById(activity._id)
         .populate({
@@ -242,6 +315,7 @@ export const resolvers = {
       if (args.endTime) activity.endTime = args.endTime;
 
       await activity.save();
+      await syncActivity(activity._id, sessionToken(context));
       return await ScheduledActivity.findById(activity._id)
         .populate({
            path: 'placeId',
@@ -258,6 +332,7 @@ export const resolvers = {
       const plan = await Plan.findById(place.planId);
       if (!plan || plan.userId.toString() !== context.user.id) throw new Error('Not authorized');
 
+      await removeActivityEvents([activity], sessionToken(context));
       await ScheduledActivity.findByIdAndDelete(id);
       return true;
     }),

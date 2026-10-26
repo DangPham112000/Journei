@@ -9,6 +9,8 @@ export interface IPlan extends Document {
   /** Clerk user id of the owner; the user's details are in core.users (DAN-93). */
   userId: string;
   googleEventId?: string;
+  /** Whether the plan's activities are copied to the owner's Event Manager calendar (DAN-95). */
+  calendarSync: boolean;
 }
 
 const PlanSchema: Schema = new Schema({
@@ -18,6 +20,7 @@ const PlanSchema: Schema = new Schema({
   destinations: [{ type: Schema.Types.ObjectId, ref: 'Destination', required: true }],
   userId: { type: String, required: true, index: true },
   googleEventId: { type: String },
+  calendarSync: { type: Boolean, default: false },
 }, { timestamps: true });
 
 export const Plan = mongoose.model<IPlan>('Plan', PlanSchema);

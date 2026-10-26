@@ -47,8 +47,10 @@ services:
       - CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
       # Used to find Clerk's OAuth authorization server for the MCP endpoint.
       - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY}
-      # Origins allowed to use a Clerk session token (comma-separated).
-      - CLERK_AUTHORIZED_PARTIES=https://${DOMAIN}
+      # Origins allowed to use a Clerk session token (comma-separated). Doppler journei/prd
+      # references ${shared.prd.CLERK_AUTHORIZED_PARTIES}, the list of every ecosystem app, so the
+      # apps can call each other; falls back to Journei's own origin if it is not set.
+      - CLERK_AUTHORIZED_PARTIES=${CLERK_AUTHORIZED_PARTIES:-https://${DOMAIN}}
       - NODE_ENV=production
       - FRONTEND_URL=https://${DOMAIN}
       # Event Manager's API over the shared ecosystem network, for calendar sync (DAN-95).

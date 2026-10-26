@@ -119,6 +119,9 @@ export const resolvers = {
   Plan: {
     id: (parent: any) => parent._id || parent.id,
     calendarSync: (parent: any) => !!parent.calendarSync,
+    // A Date would be serialized as milliseconds ("1793491200000"), which the browser cannot parse.
+    startDate: (parent: any) => new Date(parent.startDate).toISOString(),
+    endDate: (parent: any) => new Date(parent.endDate).toISOString(),
   },
 
   Place: {

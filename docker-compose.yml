@@ -40,6 +40,14 @@ services:
       options:
         max-size: "50m"
         max-file: "3"
+    # /health returns 200 only when MongoDB answers a ping (DAN-65). The shared Mongo container
+    # has its own healthcheck in ecosystem-infra.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:4000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     environment:
       # Shared MongoDB (ecosystem-infra, DAN-90): own Mongo user, own database.
       # MONGO_PASSWORD comes from Doppler journei/prd via `doppler run`.

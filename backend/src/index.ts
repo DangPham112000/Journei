@@ -22,6 +22,22 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
+// Health check for Docker, the deploy workflow and the external uptime monitor (DAN-65).
+// Registered before the request logger so frequent probes do not flood the logs.
+// 200 only when MongoDB answers a ping; 503 otherwise. It reveals nothing but the status.
+app.get('/health', async (_req, res) => {
+  try {
+    if (mongoose.connection.readyState !== 1 || !mongoose.connection.db) {
+      throw new Error('MongoDB is not connected');
+    }
+    await mongoose.connection.db.admin().ping();
+    res.status(200).json({ status: 'ok' });
+  } catch (error) {
+    logger.warn({ err: error }, 'Health check failed');
+    res.status(503).json({ status: 'unavailable' });
+  }
+});
+
 // Middleware
 app.use(pinoHttp({ logger }));
 app.use(cors({

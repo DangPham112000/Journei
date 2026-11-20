@@ -238,3 +238,12 @@ jobs:
 
             # Clean up old unused images to prevent running out of disk space in future deployments
             docker image prune -a -f
+
+            # Fail the deploy if the app does not come up healthy through nginx (DAN-65).
+            # /health answers 200 only when the backend can reach MongoDB.
+            if ! curl -fsS --retry 15 --retry-delay 4 --retry-connrefused --retry-all-errors \
+                 -H "Host: ${DOMAIN_VALUE}" http://127.0.0.1:8081/health; then
+              echo "Health check failed after deploy. Recent backend logs:" >&2
+              docker logs --tail 50 journei-backend >&2 || true
+              exit 1
+            fi
